@@ -26,4 +26,4 @@ export USER_CREDENTIALS_PASSWORD=
 
 export AUTH_SECRET=
 
-export DATABASE_URL=
+export DATABASE_URL="postgresql://johndoe:mypassword@localhost:5432/resourcedb?schema=public&statement_timeout=60000"
