@@ -1,0 +1,94 @@
+[
+  {
+    "isActive": true,
+    "nameLower": "failure reviewer",
+    "legacyId": 6,
+    "selfObtainable": false,
+    "fullReadAccess": false,
+    "id": "caf7b717-3dee-41e0-8bf8-3217cc5a878c",
+    "name": "Failure Reviewer",
+    "fullWriteAccess": false
+  },
+  {
+    "isActive": true,
+    "nameLower": "approver",
+    "legacyId": 10,
+    "selfObtainable": false,
+    "id": "ee6f7d31-ef35-42a8-b671-b6488fb5affb",
+    "name": "Approver",
+    "fullAccess": false
+  },
+  {
+    "isActive": true,
+    "nameLower": "designer",
+    "legacyId": 11,
+    "selfObtainable": false,
+    "id": "a656b87d-1027-4141-9742-a09159ccc6a3",
+    "name": "Designer",
+    "fullAccess": false
+  },
+  {
+    "isActive": true,
+    "nameLower": "jmeter submitter (m2m | active)",
+    "selfObtainable": true,
+    "fullReadAccess": true,
+    "id": "1c6c7905-5414-4e55-b2b9-8476fe8b1289",
+    "name": "JMeter Submitter (M2M | Active)",
+    "fullWriteAccess": true
+  },
+  {
+    "isActive": true,
+    "nameLower": "jmeter copilot (admin | active) edit",
+    "selfObtainable": false,
+    "fullReadAccess": true,
+    "id": "ea0d58f6-a35a-4a6a-9d2f-bf8659260021",
+    "name": "JMeter Copilot (Admin | Active) Edit",
+    "fullWriteAccess": true
+  },
+  {
+    "isActive": true,
+    "nameLower": "this is a test 2",
+    "legacyId": 1234567,
+    "selfObtainable": true,
+    "fullReadAccess": false,
+    "id": "39ec7766-dde0-40e9-96f0-882cba99ac75",
+    "name": "This is a Test 2",
+    "fullWriteAccess": true
+  },
+  {
+    "isActive": true,
+    "nameLower": "co-pilot21",
+    "selfObtainable": false,
+    "fullReadAccess": true,
+    "id": "9e7df3c7-3f90-4cd3-8b57-6d4be5bc1314",
+    "name": "co-pilot21",
+    "fullWriteAccess": false
+  },
+  {
+    "isActive": true,
+    "nameLower": "test-submitter",
+    "selfObtainable": true,
+    "fullReadAccess": true,
+    "id": "fd3a9a06-2912-4f55-a5fb-627d2e13a718",
+    "name": "test-submitter",
+    "fullWriteAccess": true
+  },
+  {
+    "isActive": true,
+    "nameLower": "co-",
+    "selfObtainable": false,
+    "fullReadAccess": true,
+    "id": "6c5aeb97-6fdf-4417-a556-8e4e05b77cc3",
+    "name": "co-",
+    "fullWriteAccess": false
+  },
+  {
+    "isActive": true,
+    "nameLower": "co-pilots",
+    "selfObtainable": false,
+    "fullReadAccess": true,
+    "id": "a37cdf25-c7ff-4e55-a80f-79aed6cfccaa",
+    "name": "CO-PILOTS",
+    "fullWriteAccess": true
+  }
+]

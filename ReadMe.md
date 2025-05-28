@@ -1,247 +1,243 @@
-# Topcoder Challenge Resources API
+  # Topcoder Resources Data Migration Tool
+  
+  This tool is designed to **migrate data from DynamoDB (JSON format) to PostgreSQL** using **Prisma ORM**. It covers five key models of the Topcoder Resources API:
+  
+  - `MemberProfile`
+  - `MemberStats`
+  - `ResourceRole`
+  - `ResourceRolePhaseDependency`
+  - `Resource`
+  
+  ## 📦 Technologies Used
+  - **Node.js** (backend scripting)
+  - **Prisma ORM** (PostgreSQL schema management)
+  - **PostgreSQL 16.3** (Dockerized database)
+  - **Docker & Docker Compose** (for DB setup)
+  - **stream-json / readline** (for streaming JSON migration)
+  - **Jest** (unit testing framework)
+  
+  ## ⚙️ Environment Configuration
+  Create a `.env` file in the root directory:
+  
+  ```env
+  DATABASE_URL="postgresql://postgres:postgres@localhost:5432/resourcesdb"
+  CREATED_BY="resources-api-db-migration"
+  ```
+  
+  > The `CREATED_BY` field can be overridden at runtime:
+  ```bash
+  CREATED_BY=eduardo node src/index.js member-stats ./data/MemberStats_test.json
+  ```
+  
+  ## 🚀 How to Run
+  
+  This tool expects a running PostgreSQL instance defined in `docker-compose.yml`.
+  
+  1. Clone the repo and install dependencies:
+  
+  ```bash
+  npm install
+  ```
+  
+  2. Start PostgreSQL with Docker Compose:
+  
+  ```bash
+  docker-compose up -d
+  ```
+  
+  To tear it down completely (including the volume):
+  
+  ```bash
+  docker-compose down -v
+  ```
+  
+  > The database runs on port `5432` with credentials `postgres:postgres`, and is mapped to `resourcesdb`.
+  
+  3. Push the Prisma schema to the database:
+  
+  ```bash
+  npx prisma db push
+  ```
+  
+  4. Run a migration step (with optional file override):
+  
+  ```bash
+  node src/index.js member-stats
+  node src/index.js resources ./data/challenge-api.resources.json
+  ```
+  
+  You can override the default `createdBy` value:
+  
+  ```bash
+  CREATED_BY=my-migrator node src/index.js member-profiles
+  ```
+  
+  ## 🧩 Available Migration Steps
+  
+  | Step                                | Auto Strategy | Description                                                                                       |
+  |-------------------------------------|---------------|---------------------------------------------------------------------------------------------------|
+  | `member-profiles`                  | ✅            | Auto strategy: uses `stream-json` (batch) for files larger than 3MB, and `loadJSON` (simple) otherwise |
+  | `member-stats`                     | ✅            | Auto strategy: uses `stream-json` (batch) for files larger than 3MB, and `loadJSON` (simple) otherwise |
+  | `resource-roles`                   | ❌            | Simple in-memory migration using `loadJSON`, not expected to be large                             |
+  | `resource-role-phase-dependencies` | ❌            | Simple in-memory migration using `loadJSON`, not expected to be large                             |
+  | `resources`                        | ✅            | Auto strategy for NDJSON files: uses `readline` + batch for files > 3 MB, otherwise simple line-by-line       |
 
-This microservice provides interaction with Challenge Resources.
+  > ⚙️ **Why Auto Strategy?**
+>
+> For models that involve large datasets (`member-profiles`, `member-stats`, and `resources`), the tool implements an **automatic selection strategy** based on file size:
+> - If the input file is **larger than 3 MB**, the migration runs in **batch mode using streaming (e.g., `stream-json` or `readline`)** to reduce memory usage.
+> - For **smaller files**, it defaults to **simple in-memory processing** (`loadJSON`) for faster performance.
+>
+> This approach ensures optimal balance between **efficiency** and **stability**, especially when working with hundreds of thousands of records (e.g., over 850,000 for MemberProfile).
+  
+  ### 📁 Default Input Files per Migration Step
+  
+  The following files are used by default for each step, unless a custom path is provided via the CLI:
+  
+  | Step                                | Default File Path                                             |
+  |-------------------------------------|----------------------------------------------------------------|
+  | `member-profiles`                  | `./data/MemberProfile_dynamo_data.json`                       |
+  | `member-stats`                     | `./data/MemberStats_dynamo_data.json`                         |
+  | `resource-roles`                   | `./data/ResourceRole_dynamo_data.json`                        |
+  | `resource-role-phase-dependencies` | `./data/ResourceRolePhaseDependency_dynamo_data.json`         |
+  | `resources`                        | `./data/Resource_data.json` ← requires NDJSON format          |
+  
+  💡 **Note:** If you're using the original ElasticSearch export file (`challenge-api.resources.json`) provided in the forum ([link here](https://drive.google.com/file/d/1F8YW-fnKjn8tt5a0_Z-QenZIHPiP3RK7/view?usp=sharing)), you must explicitly provide its path when running the migration:
+  
+  ```bash
+  node src/index.js resources ./data/challenge-api.resources.json
+  ```
 
-### Development deployment status
-[![CircleCI](https://circleci.com/gh/topcoder-platform/resources-api/tree/develop.svg?style=svg)](https://circleci.com/gh/topcoder-platform/resources-api/tree/develop)
+### 🔁 Run All Migrations at Once
 
-### Production deployment status
-[![CircleCI](https://circleci.com/gh/topcoder-platform/resources-api/tree/master.svg?style=svg)](https://circleci.com/gh/topcoder-platform/resources-api/tree/master)
-
-## Swagger definition
--  [Swagger](https://github.com/topcoder-platform/resources-api/blob/develop/docs/swagger.yaml)
-
-## Intended use
-
-- Production API
-
-## Related repos
--  [Challenge API](https://github.com/topcoder-platform/challenge-api)
--  [Frontend App](https://github.com/topcoder-platform/challenge-engine-ui)
-
-## Prerequisites
--  [NodeJS](https://nodejs.org/en/) (v10)
--  [Docker](https://www.docker.com/)
--  [Docker Compose](https://docs.docker.com/compose/)
-
-## Configuration
-
-Configuration for the application is at `config/default.js`.
-The following parameters can be set in config files or in env variables:
-
-- LOG_LEVEL: the log level, default is 'debug'
-- PORT: the server port, default is 3000
-- API_VERSION: the API version, default is v5
-- AUTH_SECRET: The authorization secret used during token verification.
-- VALID_ISSUERS: The valid issuer of tokens, a json array contains valid issuer.
-- AUTH0_URL: Auth0 URL, used to get TC M2M token
-- AUTH0_AUDIENCE: Auth0 audience, used to get TC M2M token
-- TOKEN_CACHE_TIME: Auth0 token cache time, used to get TC M2M token
-- AUTH0_CLIENT_ID: Auth0 client id, used to get TC M2M token
-- AUTH0_CLIENT_SECRET: Auth0 client secret, used to get TC M2M token
-- AUTH0_PROXY_SERVER_URL: Proxy Auth0 URL, used to get TC M2M token
-- TERMS_API_URL: Terms API url, default is 'https://api.topcoder-dev.com/v5/terms'
-- MEMBER_API_URL: Member api url, default is 'https://api.topcoder-dev.com/v3/members'
-- USER_API_URL: User api url, default is 'https://api.topcoder-dev.com/v3/users'
-- CHALLENGE_API_URL: Challenge api url, default is 'http://localhost:4000/v5/challenges'.
-- CHALLENGE_PHASES_API_URL: Challenge phases API URL, default is 'https://api.topcoder-dev.com/v5/challengephases'.
-- SUBMISSIONS_API_URL: Submission API URL, default value is 'https://api.topcoder-dev.com/v5/submissions'
-- SCOPES: The M2M scopes, refer `config/default.js` for more information
-- BUSAPI_URL: the bus api, default value is 'https://api.topcoder-dev.com/v5'
-- KAFKA_ERROR_TOPIC: Kafka error topic, default value is 'common.error.reporting',
-- KAFKA_MESSAGE_ORIGINATOR: the Kafka message originator, default value is 'resources-api'
-- RESOURCE_CREATE_TOPIC: the resource create Kafka topic, default value is 'challenge.action.resource.create',
-- RESOURCE_DELETE_TOPIC: the resource delete Kafka topic, default value is 'challenge.action.resource.delete',
-- RESOURCE_ROLE_CREATE_TOPIC: the resource role create topic, default value is 'challenge.action.resource.role.create',
-- RESOURCE_ROLE_UPDATE_TOPIC: the resource role update topic, default value is 'challenge.action.resource.role.update'
-- AUTOMATED_TESTING_NAME_PREFIX: the role name prefix for every `ResourceRole` record
-
-Configuration for testing is at `config/test.js`, only add such new configurations different from `config/default.js`
-- WAIT_TIME: wait time used in test, default is 6000 or 6 seconds
-- MOCK_CHALLENGE_API_PORT: the mock server port, default is 4000.
-- AUTH_V2_URL: The auth v2 url
-- AUTH_V2_CLIENT_ID: The auth v2 client id
-- AUTH_V3_URL: The auth v3 url
-- ADMIN_CREDENTIALS_USERNAME: The user's username with admin role
-- ADMIN_CREDENTIALS_PASSWORD: The user's password with admin role
-- COPILOT_CREDENTIALS_USERNAME: The user's username with copilot role
-- COPILOT_CREDENTIALS_PASSWORD: The user's password with copilot role
-- USER_CREDENTIALS_USERNAME: The user's username with user role
-- USER_CREDENTIALS_PASSWORD: The user's password with user role
-- AUTOMATED_TESTING_REPORTERS_FORMAT: indicates reporters format. It is an array of the formats. e.g. `['html']` produces html format. `['cli', 'json', 'junit', 'html']` is the full format.   
-*For the details of the supported format, please refer to https://www.npmjs.com/package/newman#reporters*.
-
-## Available commands
-- Be sure to set correct value for environment variable `DATABASE_URL` first.
-- Install dependencies `npm install`
-- Run lint `npm run lint`
-- Run lint fix `npm run lint:fix`
-- Create tables `npm run create-tables`
-- Reset tables `npm run drop-tables`
-- Clear all data in db `npm run clear-tables`
-- Create tables for test environment `npm run create-tables:test`
-- Reset tables for test environment `npm run drop-tables:test`
-- Clear and init db `npm run init-db`
-- Start app `npm start`
-- App is running at `http://localhost:3000`
-- Start mock challenge api server for unit tests `npm run mock-challenge-api`
-- Start mock api server for local dev `npm run mock-api`
-- The mock challenge api server is running at `http://localhost:4000`
-- The mock api server is running at `http://localhost:4001`
-- Run the Postman tests `npm run test:newman`
-- Clear the testing data by Postman tests: `npm run test:newman:clear`
-
-## Local Deployment
-### Foreman Setup
-To install foreman follow this [link](https://theforeman.org/manuals/1.24/#3.InstallingForeman)
-
-To know how to use foreman follow this [link](https://theforeman.org/manuals/1.24/#2.Quickstart)
-
-
-### Database Setup
-
-We can use Postgres setup on Docker for testing purpose. Just run `docker-compose up` in `local` folder.
-
-You can also use docker to start it directly.
-```bash
-docker pull postgres:16.8
-
-docker run -d --name resourcedb -p 5432:5432 \
-  -e POSTGRES_USER=johndoe -e POSTGRES_DB=resourcedb \
-  -e POSTGRES_PASSWORD=mypassword \
-  postgres:16.8
-```
-
-After that, please run
-```bash
-export DATABASE_URL="postgresql://johndoe:mypassword@localhost:5432/resourcedb?schema=public&statement_timeout=60000"
-```
-
-### Create Tables
-
-1. Make sure Postgres are running as per instructions above.
-2. Make sure you have configured all config parameters. Refer [Configuration](#configuration)
-3. Run `npm run create-tables` to create tables and `npm run seed-tables` to create test data.
-
-### Mock API
-
-This mock service is designed for local development.
-
-You can run mock api with `npm run mock-api`
-
-It will setup local environment for Challenge API, Submission API and Member API.
-
-### Mock Challenge V5 API
-
-This mock service is designed for unit tests.
-
-The `GET /v5/challenges/{id}` is mocked. It is a simple server app, the code is under mock folder.
-You can start the mock server using command `npm run mock-challenge-api`.
-
-### Scripts
-1. Creating tables: `npm run create-tables`
-2. Drop/delete tables: `npm run drop-tables`
-3. Seed/Insert data to tables: `npm run seed-tables`
-4. Initialize database in default environment, it will clear all data: `npm run init-db`
-5. View table data in default environment: `npm run view-data <ModelName>`, ModelName can be `Resource`, `ResourceRole` or `ResourceRolePhaseDependency`
-
-
-## Production deployment
-
-- TBD
-
-## Running tests
-
-### Configuration
-Test configuration is at `config/test.js`. You don't need to change them.
-
-The following test parameters can be set in config file or in env variables:
-
-- WAIT_TIME: wait time
-- MOCK_CHALLENGE_API_PORT: mock challenge api port
-- AUTH_V2_URL: The auth v2 url
-- AUTH_V2_CLIENT_ID: The auth v2 client id
-- AUTH_V3_URL: The auth v3 url
-- ADMIN_CREDENTIALS_USERNAME: The user's username with admin role
-- ADMIN_CREDENTIALS_PASSWORD: The user's password with admin role
-- COPILOT_CREDENTIALS_USERNAME: The user's username with copilot role
-- COPILOT_CREDENTIALS_PASSWORD: The user's password with copilot role
-- USER_CREDENTIALS_USERNAME: The user's username with user role
-- USER_CREDENTIALS_PASSWORD: The user's password with user role
-
-
-### Prepare
-
-- Start Local Postgres.
-- Create Postgres tables and create test dat.
-- Config `DATABASE_URL`
-- Various config parameters should be properly set.
-
-### Running unit tests
-
-#### Setup Database for Tests
-
-The Unit tests will clear all data in db. So it's better to setup db for test environment.
-
-If you are using docker, you can run
-```bash
-docker run -d --name testdb -p 5430:5432 \
-  -e POSTGRES_USER=johndoe -e POSTGRES_DB=testdb \
-  -e POSTGRES_PASSWORD=mypassword \
-  postgres:16.8
-
-export DATABASE_URL="postgresql://johndoe:mypassword@localhost:5430/testdb?schema=public&statement_timeout=60000"
-```
-It will start a Postgres and listens to port `5430`. Technically you can run tests and application at the same time.
-
-Be sure to export `DATABASE_URL` new value before running tests.
-
-
-#### Running unit tests.
-
-To run unit tests and generate coverage report.
+You can now run all migration steps sequentially using the following script:
 
 ```bash
-npm run test
+node src/migrateAll.js
 ```
 
-### Running E2E tests with Postman
+This script will automatically execute each step in order (`member-profiles`, `member-stats`, `resource-roles`, `resource-role-phase-dependencies`, `resources`), logging progress and duration for each. Ideal for full dataset migration in one command.
+  
+  ## 📒 Error Logs
+  All failed migrations are logged under the `logs/` folder by model:
+  
+  - `logs/memberprofile_errors.log` ← from `MemberProfile_dynamo_data.json` *(7 migrations failed)*
+  - `logs/memberstats_errors.log` ← from `MemberStats_dynamo_data.json` *(1 migration failed)*
+  - `logs/rrpd_errors.log` ← from `ResourceRolePhaseDependency_dynamo_data.json` *(17 migrations failed)*
+  
+  > ✅ Most migrations complete successfully. Errors are logged for further review and debugging.
+  
+  ## ✅ Verification
+  You can verify successful migration with simple SQL queries, for example:
+  ```sql
+  SELECT COUNT(*) FROM "MemberProfile";
+  SELECT COUNT(*) FROM "Resource";
+  ```
+  To connect:
+  ```bash
+  docker exec -it resources_postgres psql -U postgres -d resourcesdb
+  ```
+  
+  ## 📸 Screenshots
+  See `/docs/` for evidence of a fully mounted database.
+  ![Screenshot from 2025-04-14 16-58-20](https://github.com/user-attachments/assets/8fb66fb8-3db1-4b51-bb29-c1db7b207689)
+  
+  ## 🧪 Testing
+  
+  Run all test suites with:
+  
+  ```bash
+  npm test
+  ```
+  
+  Each migrator has a corresponding unit test with mock input files under `src/test/mocks/`. Jest is used as the testing framework.
+  
+  ---
+  
+### 📂 Data Files Not Included
 
-#### `Start` the app server and mock API server before running e2e tests. You may need to set the env variables by calling `source env.sh` before calling `NODE_ENV=test npm start`.
+The official DynamoDB dataset files provided in the forum (e.g., `MemberProfile_dynamo_data.json`, `challenge-api.resources.json`, etc.) are **not included** in this submission due to size constraints.
 
-- Make sure the db and es are started
+Please download them manually from the official challenge forum and place them under the `/data/` directory.
+
+🔗 [Official Data Files (Google Drive)](https://drive.google.com/file/d/1F8YW-fnKjn8tt5a0_Z-QenZIHPiP3RK7/view?usp=sharing)
+
+> 🧪 This project **includes lightweight mock data files** under `src/test/mocks/` for testing purposes and sample execution. Full data is only required for production migration.
+  
+  ---
+  
+  ✅ All requirements of the challenge have been implemented, including logs, unit tests, schema adherence, and configurability.
+
+
+## 🔧 Integrated Fixes & Enhancements
+
+Several improvements and refinements have been implemented throughout the migration tool to ensure performance, reliability, and clarity:
+
+### ✅ Progress Bar for Batch Processes
+
+A custom CLI progress bar was added using `utils/progressLogger.js`. This applies only to **batch-based migrations**, and provides a visual representation of migration progress based on the total number of records or batches processed:
+- Implemented for: `member-profiles`, `member-stats`, and `resources`
+- Skipped for small or in-memory migrations like `resource-roles` and `resource-role-phase-dependencies`
+
+### ✅ Efficient Validation via Binary Search
+
+Validation scripts for:
+- `MemberProfile`
+- `MemberStats`
+
+...now utilize **binary search** over pre-fetched and sorted database records by `userId`. This significantly improves performance from several minutes to a few seconds during large-scale validation (~850k records), compared to naive linear scanning.
+
+### ✅ Validation for All Models
+
+Additional validation scripts were also developed for:
+- `Resource`
+- `ResourceRole`
+- `ResourceRolePhaseDependency`
+
+While binary search was not applicable for these due to non-numeric or unordered IDs, the validation was still efficiently implemented using `Map`-based lookups with the `id` as the key.
+
+### ✅ Cleaner Code & Utility Reuse
+
+A reusable utility module `utils/batchMigrator.js` was created to consolidate the logic for:
+- Streamed reading of large JSON and NDJSON files
+- Batch-based record processing with `Promise.allSettled`
+- Progress tracking and error logging
+- Automatic detection of input format size
+
+This approach:
+- Avoids code duplication
+- Allows for consistent logging and error handling
+- Simplifies future extensions
+
+### ✅ Default Field Logic (createdAt, updatedAt, etc.)
+
+- Fields like `createdAt`, `updatedAt`, `createdBy`, and `updatedBy` are now conditionally set based on whether values exist in the original JSON.
+- If `updatedAt` or `updatedBy` are missing from the source, they are explicitly set to `null`, rather than omitted or auto-filled—ensuring data integrity.
+
+### ✅ FullAccess Compatibility Fix
+
+In `ResourceRole`, the original dataset sometimes includes only a `fullAccess` flag instead of `fullReadAccess` or `fullWriteAccess`.
+
+Logic was added to:
+- Derive `fullReadAccess` and `fullWriteAccess` from `fullAccess` when the specific fields are missing.
+- Ensure fallback to `.env` defaults only if neither are provided.
+
+```js
+const fullReadAccess = role.fullReadAccess ?? (role.fullAccess ?? DEFAULT_READ_ACCESS);
+const fullWriteAccess = role.fullWriteAccess ?? (role.fullAccess ?? DEFAULT_WRITE_ACCESS);
+```
+
+> 🚩 **Important Note:** Some records in the source data had `fullWriteAccess: true` but `fullReadAccess: false`, which is logically inconsistent. This was **not auto-corrected**, but a warning was added in the README for awareness during validation.
+
+### 📄 Validation Logs
+
+All validation scripts write their outputs and mismatches to `console.log`. You can redirect them to a file using:
+
 ```bash
-  $ cd resources-api
-
-    # NOTE:
-    # if tables and data already exist, please run first
-
-    # $ npm run drop-tables
-
-    # to drop data and tables
-
-    # Then re-initialize the es server and the database.
-
-  $ npm run create-tables
-  $ npm run init-db
+node src/validation/validateMemberProfiles.js > logs/memberprofile_validation.log
 ```
 
-To run postman e2e tests.
+---
 
-```bash
-npm run test:newman
-```
 
-To clear the testing data from postman e2e tests.
-
-```bash
-npm run test:newman:clear
-```
-
-## Running tests in CI
-
-- TBD
-
-## Verification
-
-Refer to the verification document `Verification.md`.
+  
