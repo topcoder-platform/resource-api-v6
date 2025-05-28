@@ -9,7 +9,7 @@ COPY . /resources-api
 WORKDIR /resources-api
 
 # Install the dependencies from package.json
-RUN yarn install
+RUN --mount=type=ssh yarn install
 RUN yarn lint
 RUN yarn lint:fix
 
