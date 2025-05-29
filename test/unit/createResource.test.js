@@ -16,6 +16,7 @@ const { assertValidationError, assertError, assertResource, getRoleIds, clearDep
 const challengeId1 = 'fe6d0a58-ce7d-4521-8501-b8132b1c0391'
 const challengeId2 = 'fe6d0a58-ce7d-4521-8501-b8132b1c0392'
 const challengeId3 = 'fe6d0a58-ce7d-4521-8501-b8132b1c0393'
+const challengeId4 = 'fe6d0a58-ce7d-4521-8501-b8132b1c0394'
 const phaseId1 = 'ad123e44-c6c4-4cb3-8c60-e0339e1eaa3e'
 const phaseId2 = 'ad123e44-c6c4-4cb3-8c60-e0339e1eaa40'
 const phaseId3 = 'ad123e44-c6c4-4cb3-8c60-e0339e1eaa41'
@@ -309,6 +310,18 @@ module.exports = describe('Create resource', () => {
       } catch (err) {
         should.equal(err.name, 'BadRequestError')
         assertError(err, `User with handle: 123abcx doesn't exist`)
+      }
+    })
+
+    it(`failure - create resource group access denied`, async () => {
+      const entity = resources.createBody('denis', submitterRoleId, challengeId4)
+      try {
+        await service.createResource(user.denis, entity)
+        throw new Error('should not throw error here')
+      } catch (err) {
+        console.log(err)
+        should.equal(err.name, 'UnauthorizedError')
+        assertError(err, `The user does not have access to the groups assigned to the challenge.`)
       }
     })
 

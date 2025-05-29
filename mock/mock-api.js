@@ -101,6 +101,18 @@ app.get('/members/:handle', (req, res) => {
   mockMemberId += 1
 })
 
+// get user groups
+app.get('/groups/memberGroups/:userId', (req, res) => {
+  const memberId = parseInt(req.params.userId)
+  winston.info(`Getting group for member ${memberId}`)
+  // return result with group info
+  const groups = [
+    '11111111-2222-3333-9999-555555555555',
+    '11111111-2222-3333-9999-555555555556'
+  ]
+  res.json(groups)
+})
+
 app.use((req, res) => {
   res.status(404).json({ error: 'route not found' })
 })

@@ -30,6 +30,7 @@ module.exports = {
   CHALLENGE_API_URL: process.env.CHALLENGE_API_URL || 'http://localhost:4000/v5/challenges',
   CHALLENGE_PHASES_API_URL: process.env.CHALLENGE_PHASES_API_URL || 'https://api.topcoder-dev.com/v5/challenge-phases',
   SUBMISSIONS_API_URL: process.env.SUBMISSIONS_API_URL || 'https://api.topcoder-dev.com/v5/submissions',
+  GROUPS_API_URL: process.env.GROUPS_API_URL || 'https://api.topcoder-dev.com/v5/groups',
 
   SCOPES: {
     READ: process.env.SCOPE_READ || 'read:resources',

@@ -225,5 +225,52 @@
         "scheduledEndDate": "2026-01-02T00:00:00"
       }
     ]
+  },
+  {
+    "id": "11111111-2222-3333-4444-55555555555d",
+    "name": "Active Challenge - Group Access",
+    "status": "Active",
+    "groups": [
+      "11111111-2222-3333-9999-555555555555"
+    ],
+    "phases": [
+      {
+        "phaseId": "a93544bc-c165-4af4-b55e-18f3593b457a",
+        "name": "Registration",
+        "isOpen": true,
+        "scheduledStartDate": "2025-01-01T00:00:00",
+        "scheduledEndDate": "2026-01-01T00:00:00"
+      }, {
+        "phaseId": "6950164f-3c5e-4bdc-abc8-22aaf5a1bd49",
+        "name": "Submission",
+        "isOpen": true,
+        "scheduledStartDate": "2025-01-01T00:00:00",
+        "scheduledEndDate": "2026-01-01T00:00:00"
+      }
+    ]
+  },
+  {
+    "id": "11111111-2222-3333-4444-55555555555e",
+    "name": "Active Challenge - Group Access",
+    "status": "Active",
+    "groups": [
+      "11111111-2222-3333-9999-555555555555",
+      "11111111-2222-3333-9999-555555555557"
+    ],
+    "phases": [
+      {
+        "phaseId": "a93544bc-c165-4af4-b55e-18f3593b457a",
+        "name": "Registration",
+        "isOpen": true,
+        "scheduledStartDate": "2025-01-01T00:00:00",
+        "scheduledEndDate": "2026-01-01T00:00:00"
+      }, {
+        "phaseId": "6950164f-3c5e-4bdc-abc8-22aaf5a1bd49",
+        "name": "Submission",
+        "isOpen": true,
+        "scheduledStartDate": "2025-01-01T00:00:00",
+        "scheduledEndDate": "2026-01-01T00:00:00"
+      }
+    ]
   }
 ]

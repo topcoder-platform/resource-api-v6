@@ -232,6 +232,12 @@ async function init (currentUser, challengeId, resource, isCreated) {
     throw new errors.BadRequestError(`Cannot create submitter resource on challenge with status ${_.get(challenge, 'status')}`)
   }
 
+  // check user group access
+  const groupAccess = await helper.checkChallengeGroupAccess(currentUser, _.get(challenge, 'groups', []))
+  if (!groupAccess) {
+    throw new errors.UnauthorizedError('The user does not have access to the groups assigned to the challenge.')
+  }
+
   const allResources = await prisma.resource.findMany({ where: { challengeId } })
 
   const registrationPhase = challenge.phases.find((phase) => phase.name === 'Registration')

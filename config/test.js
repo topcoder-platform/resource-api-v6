@@ -8,6 +8,7 @@ module.exports = {
   CHALLENGE_PHASES_API_URL: 'http://localhost:4000/v5/challenge-phases',
   SUBMISSIONS_API_URL: 'http://localhost:4000/v5/submissions',
   MEMBER_API_URL: 'http://localhost:4000/v5/members',
+  GROUPS_API_URL: 'http://localhost:4000/v5/groups',
   WAIT_TIME: 6000,
   MOCK_CHALLENGE_API_PORT: 4000,
   MOCK_API_PORT: 4001,

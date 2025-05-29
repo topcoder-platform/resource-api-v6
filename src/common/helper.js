@@ -360,6 +360,40 @@ async function getAllPages (url, query) {
 }
 
 /**
+ * Get all user group ids
+ * @param {String} userId the user id
+ * @returns {Promise<Array>} the user group ids
+ */
+async function getUserGroupIds(userId) {
+  const url = config.GROUPS_API_URL + `/memberGroups/${userId}`
+  const response = await getRequest(url, { uuid: true })
+  return response.body
+}
+
+/**
+ * Check user has permission on challenge groups. Throw 403 if user is forbidden.
+ * @param {Object} authUser auth user
+ * @param {Array} groups challenge.groups
+ */
+async function checkChallengeGroupAccess(authUser, groups) {
+  // allow admin user
+  if (authUser.isMachine || hasAdminRole(authUser)) {
+    return true
+  }
+  // if challenge.groups is empty, allow access
+  if (!groups || groups.length === 0) {
+    return true
+  }
+  // get user group ids
+  const userGroupIds = await getUserGroupIds(authUser.userId)
+  const filtered = groups.filter(e => !userGroupIds.includes(e))
+  if (filtered.length > 0) {
+    return false
+  }
+  return true
+}
+
+/**
  * Check if the user has agreed to all challenge terms
  * @param {Number} userId the user ID
  * @param {Array<String>} terms an array of term UUIDs to check
@@ -431,6 +465,7 @@ module.exports = {
   isCustomError,
   setResHeaders,
   getAllPages,
+  checkChallengeGroupAccess,
   checkAgreedTerms,
   postRequest,
   advanceChallengePhase
