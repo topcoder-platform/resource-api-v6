@@ -55,9 +55,9 @@ const mockChallengeApi = http.createServer((req, res) => {
                 id: 'ae6d0a58-ce7d-4521-8501-b8132b1c0393',
                 roleId: config.SUBMITTER_RESOURCE_ROLE_ID
               }],
-            groups: (challengeId === 'fe6d0a58-ce7d-4521-8501-b8132b1c0394') ? 
-              ['11111111-2222-3333-9999-555555555555', '11111111-2222-3333-9999-555555555557'] : 
-              (challengeId === 'fe6d0a58-ce7d-4521-8501-b8132b1c0391' ? ['11111111-2222-3333-9999-555555555555'] : []),
+            groups: (challengeId === 'fe6d0a58-ce7d-4521-8501-b8132b1c0394')
+              ? ['11111111-2222-3333-9999-555555555555', '11111111-2222-3333-9999-555555555557']
+              : (challengeId === 'fe6d0a58-ce7d-4521-8501-b8132b1c0391' ? ['11111111-2222-3333-9999-555555555555'] : []),
             phases: [{
               phaseId: 'aa5a3f78-79e0-4bf7-93ff-b11e8f5b398b',
               isOpen: true
@@ -110,9 +110,9 @@ const mockChallengeApi = http.createServer((req, res) => {
       if (handle === '123abcx') {
         return send(res, 404, {})
       } else if (Object.keys(userIds).includes(handle.toLowerCase())) {
-        return send(res, 200, { userId: userIds[handle.toLowerCase()], email: '' })
+        return send(res, 200, { userId: userIds[handle.toLowerCase()], email: '', handle })
       }
-      return send(res, 200, { userId: 123456, email: 'test@topcoder.com' })
+      return send(res, 200, { userId: 123456, email: 'test@topcoder.com', handle })
     } else if (req.method === 'GET' && req.url.match(/^\/v5\/groups\/memberGroups.+$/)) {
       const groups = [
         '11111111-2222-3333-9999-555555555555',

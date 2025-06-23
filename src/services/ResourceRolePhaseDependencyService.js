@@ -84,7 +84,7 @@ async function createDependency (authUser, data) {
     let entity = await prisma.resourceRolePhaseDependency.create({
       data: _.assign({
         id: uuid(),
-        createdBy: helper.getUserHandleOrSub(authUser),
+        createdBy: helper.getUserIdFromToken(authUser),
         createdAt: moment().utc().format()
       }, data)
     })

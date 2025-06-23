@@ -557,6 +557,7 @@ definitions:
     required:
       - challengeId
       - memberHandle
+      - memberId
       - roleId
     properties:
       challengeId:
@@ -566,6 +567,9 @@ definitions:
       memberHandle:
         type: string
         description: The member handle
+      memberId:
+        type: string
+        description: The member id
       roleId:
         type: string
         format: UUID

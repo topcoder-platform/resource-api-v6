@@ -53,8 +53,8 @@ module.exports = describe('Delete resource', () => {
       await service.deleteResource(user.m2m, entity)
       throw new Error('should not throw error here')
     } catch (err) {
-      should.equal(err.name, 'NotFoundError')
-      assertError(err, `User 123abcx doesn't have resource with roleId: ${observerRoleId} in challenge ${challengeId}`)
+      should.equal(err.name, 'BadRequestError')
+      assertError(err, `User with handle: 123abcx doesn't exist`)
     }
   })
 
@@ -145,7 +145,7 @@ module.exports = describe('Delete resource', () => {
     should.equal(ret.memberHandle.toLowerCase(), 'ghostar')
     should.equal(ret.roleId, submitterRoleId)
     should.exist(ret.created)
-    should.equal(ret.createdBy, user.m2m.sub)
+    should.equal(ret.createdBy, '151743')
   })
 
   it('delete resource by user', async () => {
@@ -163,7 +163,7 @@ module.exports = describe('Delete resource', () => {
     should.equal(ret.memberHandle.toLowerCase(), 'denis')
     should.equal(ret.roleId, submitterRoleId)
     should.exist(ret.created)
-    should.equal(ret.createdBy.toLowerCase(), 'denis')
+    should.equal(ret.createdBy.toLowerCase(), '251280')
   })
 
   it('delete resource by admin', async () => {
@@ -181,7 +181,7 @@ module.exports = describe('Delete resource', () => {
     should.equal(ret.memberHandle.toLowerCase(), 'hohosky')
     should.equal(ret.roleId, copilotRoleId)
     should.exist(ret.created)
-    should.equal(ret.createdBy.toLowerCase(), 'tonyj')
+    should.equal(ret.createdBy.toLowerCase(), '16096823')
   })
 
   it(`delete self obtainable resource by user itself`, async () => {
@@ -199,6 +199,6 @@ module.exports = describe('Delete resource', () => {
     should.equal(ret.memberHandle.toLowerCase(), 'lars2520')
     should.equal(ret.roleId, submitterRoleId)
     should.exist(ret.created)
-    should.equal(ret.createdBy.toLowerCase(), 'lars2520')
+    should.equal(ret.createdBy.toLowerCase(), '287131')
   })
 })

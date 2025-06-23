@@ -242,7 +242,15 @@ async function init (currentUser, challengeId, resource, isCreated) {
 
   const registrationPhase = challenge.phases.find((phase) => phase.name === 'Registration')
   const currentSubmitters = _.filter(allResources, (r) => r.roleId === config.SUBMITTER_RESOURCE_ROLE_ID)
-  const handle = resource.memberHandle
+  let handle = resource.memberHandle
+  const resourceMemberId = resource.memberId
+
+  let memberInfoFromDb = await helper.getMemberDetailsById(resourceMemberId)
+  if (!memberInfoFromDb) {
+    memberInfoFromDb = await helper.getMemberDetailsByHandle(handle)
+  }
+  const { memberId, email } = memberInfoFromDb
+  handle = memberInfoFromDb.handle
   const userResources = allResources.filter((r) => _.toLower(r.memberHandle) === _.toLower(handle))
   // Retrieve the constraint - Allowed Registrants
   if (isCreated && resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID) {
@@ -257,13 +265,13 @@ async function init (currentUser, challengeId, resource, isCreated) {
       )
     ) {
       throw new errors.ConflictError(
-        `User ${resource.memberHandle} is not allowed to register.`
+        `User ${handle} is not allowed to register.`
       )
     }
     if (!_.get(challenge, 'task.isTask', false) && (_.toLower(challenge.createdBy) === _.toLower(handle) ||
       _.some(userResources, r => r.roleId === config.REVIEWER_RESOURCE_ROLE_ID || r.roleId === config.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID))) {
       throw new errors.BadRequestError(
-        `User ${resource.memberHandle} is not allowed to register.`
+        `User ${handle} is not allowed to register.`
       )
     }
   }
@@ -278,14 +286,12 @@ async function init (currentUser, challengeId, resource, isCreated) {
   const currentUserResources = allResources.filter((r) => _.toString(r.memberId) === _.toString(currentUser.userId))
   const isResourceExist = !_.isUndefined(_.find(userResources, r => r.roleId === resource.roleId))
   if (isCreated && isResourceExist) {
-    throw new errors.ConflictError(`User ${resource.memberHandle} already has resource with roleId: ${resource.roleId} in challenge: ${challengeId}`)
+    throw new errors.ConflictError(`User ${handle} already has resource with roleId: ${resource.roleId} in challenge: ${challengeId}`)
   }
 
   if (!isCreated && !isResourceExist) {
     throw new errors.NotFoundError(`User ${handle} doesn't have resource with roleId: ${resource.roleId} in challenge ${challengeId}`)
   }
-
-  const { memberId, email } = await helper.getMemberDetailsByHandle(handle)
   // check if the resource is reviewer role and has already made a submission in the challenge
   if (isCreated && (resource.roleId === config.REVIEWER_RESOURCE_ROLE_ID || resource.roleId === config.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID)) {
     const submissionsRes = await helper.getRequest(`${config.SUBMISSIONS_API_URL}`, { challengeId: challengeId, perPage: 100, memberId: memberId })
@@ -376,8 +382,9 @@ async function createResource (currentUser, resource) {
     const prismaData = _.assign({
       id: uuid(),
       memberId: _.toString(memberId),
-      createdBy: helper.getUserHandleOrSub(currentUser),
-      createdAt: moment().utc().format()
+      createdBy: _.toString(memberId),
+      createdAt: moment().utc().format(),
+      memberHandle: handle
     }, resource)
     const createdResource = await prisma.resource.create({
       data: prismaData
@@ -436,11 +443,20 @@ async function createResource (currentUser, resource) {
 
 createResource.schema = {
   currentUser: Joi.any(),
-  resource: Joi.object().keys({
-    challengeId: Joi.id(),
-    memberHandle: Joi.string().required(),
-    roleId: Joi.id()
-  }).required()
+  resource: Joi.alternatives().try(
+    Joi.object().keys({
+      challengeId: Joi.id(),
+      memberId: Joi.string(),
+      memberHandle: Joi.string().required(),
+      roleId: Joi.id()
+    }),
+    Joi.object().keys({
+      challengeId: Joi.id(),
+      memberId: Joi.string().required(),
+      memberHandle: Joi.string(),
+      roleId: Joi.id()
+    })
+  )
 }
 
 /**
@@ -483,11 +499,20 @@ async function deleteResource (currentUser, resource) {
 
 deleteResource.schema = {
   currentUser: Joi.any(),
-  resource: Joi.object().keys({
-    challengeId: Joi.id(),
-    memberHandle: Joi.string().required(),
-    roleId: Joi.id()
-  }).required()
+  resource: Joi.alternatives().try(
+    Joi.object().keys({
+      challengeId: Joi.id(),
+      memberId: Joi.string(),
+      memberHandle: Joi.string().required(),
+      roleId: Joi.id()
+    }),
+    Joi.object().keys({
+      challengeId: Joi.id(),
+      memberId: Joi.string().required(),
+      memberHandle: Joi.string(),
+      roleId: Joi.id()
+    })
+  )
 }
 
 /**

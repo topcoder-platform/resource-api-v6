@@ -99,6 +99,16 @@ function getUserHandleOrSub (authUser) {
 }
 
 /**
+ * Get user id from token
+ *
+ * @param {Object} authUser request auth user
+ * @returns user id
+ */
+function getUserIdFromToken (authUser) {
+  return authUser.userId
+}
+
+/**
  * Check if exists.
  *
  * @param {Array} source the array in which to search for the term
@@ -170,17 +180,49 @@ async function getMemberDetailsByHandle (handle) {
       },
       select: {
         userId: true,
+        handle: true,
         email: true
       }
     })
     if (!profile || !profile.userId) {
-      throw new Error('Member profile not found')
+      throw new Error(`Member profile not found for handle: ${handle}`)
+    }
+    return { memberId: profile.userId, email: profile.email, handle }
+  } catch (e) {
+    // fall back to v3 api...
+    logger.warn(`Get Member by Handle from DB Failed, trying v3 Members API. Error: ${JSON.stringify(e)}`)
+    return getMemberDetailsByHandleFromV3Members(handle)
+  }
+}
+
+/**
+ * Get Data by model id
+ * @param {String} memberId The member id
+ * @returns {Promise<void>}
+ */
+async function getMemberDetailsById (memberId) {
+  if (!memberId) {
+    return null
+  }
+  try {
+    const profile = await prisma.memberProfile.findUnique({
+      where: {
+        userId: memberId
+      },
+      select: {
+        userId: true,
+        handle: true,
+        email: true
+      }
+    })
+    if (!profile || !profile.userId) {
+      throw new Error(`Member profile not found for memberId: ${memberId}`)
     }
     return { memberId: profile.userId, email: profile.email }
   } catch (e) {
     // fall back to v3 api...
     logger.warn(`Get Member by Handle from DB Failed, trying v3 Members API. Error: ${JSON.stringify(e)}`)
-    return getMemberDetailsByHandleFromV3Members(handle)
+    return getMemberDetailsByIdFromMemberApi(memberId)
   }
 }
 
@@ -209,7 +251,42 @@ async function getMemberDetailsByHandleFromV3Members (handle) {
     throw new errors.BadRequestError(`User with handle: ${handle} doesn't exist`)
   }
 
-  return { memberId, email }
+  return { memberId, email, handle }
+}
+
+/**
+ * Get member detail by id from member api
+ * @param {String} userId user id
+ * @returns member detail
+ */
+async function getMemberDetailsByIdFromMemberApi (userId) {
+  let memberId
+  let email
+  let handle
+  try {
+    logger.warn(`getMemberByHandle ${handle} from v5`)
+    const res = await getRequest(`${config.MEMBER_API_URL}?userId=${userId}`)
+    if (_.get(res, 'body[0].userId')) {
+      memberId = String(res.body[0].userId)
+    }
+    if (_.get(res, 'body[0].email')) {
+      email = String(res.body[0].email)
+    }
+    if (_.get(res, 'body[0].handle')) {
+      handle = _.get(res, 'body[0].handle')
+    }
+  } catch (error) {
+    // re-throw all error except 404 Not-Founded, BadRequestError should be thrown if 404 occurs
+    if (error.status !== 404) {
+      throw error
+    }
+  }
+
+  if (_.isUndefined(memberId)) {
+    throw new errors.BadRequestError(`User with id: ${userId} doesn't exist`)
+  }
+
+  return { memberId, email, handle }
 }
 
 /**
@@ -222,7 +299,7 @@ async function update (authUser, modelName, dbItem, data) {
   Object.keys(data).forEach((key) => {
     dbItem[key] = data[key]
   })
-  dbItem.updatedBy = getUserHandleOrSub(authUser)
+  dbItem.updatedBy = getUserIdFromToken(authUser)
   dbItem.updatedAt = moment().utc().format()
   const prismaModel = _.camelCase(modelName)
   const ret = await prisma[prismaModel].update({
@@ -454,9 +531,11 @@ module.exports = {
   autoWrapExpress,
   getMemberInfoByIdList,
   getMemberDetailsByHandle,
+  getMemberDetailsById,
   checkIfExists,
   hasAdminRole,
   getUserHandleOrSub,
+  getUserIdFromToken,
   getById,
   update,
   validateDuplicate,

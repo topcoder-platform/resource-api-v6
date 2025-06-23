@@ -79,7 +79,7 @@ async function createResourceRole (authUser, resourceRole) {
       data: _.assign({ id: uuid(),
         nameLower,
         createdAt: moment().utc().format(),
-        createdBy: helper.getUserHandleOrSub(authUser) }, resourceRole)
+        createdBy: helper.getUserIdFromToken(authUser) }, resourceRole)
     })
     const ret = _.pick(entity, payloadFields)
     await helper.postEvent(config.RESOURCE_ROLE_CREATE_TOPIC, ret)
