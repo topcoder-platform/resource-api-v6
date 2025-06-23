@@ -207,7 +207,7 @@ async function getMemberDetailsById (memberId) {
   try {
     const profile = await prisma.memberProfile.findUnique({
       where: {
-        userId: memberId
+        userId: _.toNumber(memberId)
       },
       select: {
         userId: true,
@@ -218,7 +218,7 @@ async function getMemberDetailsById (memberId) {
     if (!profile || !profile.userId) {
       throw new Error(`Member profile not found for memberId: ${memberId}`)
     }
-    return { memberId: profile.userId, email: profile.email }
+    return { memberId: profile.userId, email: profile.email, handle: profile.handle }
   } catch (e) {
     // fall back to v3 api...
     logger.warn(`Get Member by Handle from DB Failed, trying v3 Members API. Error: ${JSON.stringify(e)}`)
