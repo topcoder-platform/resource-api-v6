@@ -441,7 +441,7 @@ async function getAllPages (url, query) {
  * @param {String} userId the user id
  * @returns {Promise<Array>} the user group ids
  */
-async function getUserGroupIds(userId) {
+async function getUserGroupIds (userId) {
   const url = config.GROUPS_API_URL + `/memberGroups/${userId}`
   const response = await getRequest(url, { uuid: true })
   return response.body
@@ -452,7 +452,7 @@ async function getUserGroupIds(userId) {
  * @param {Object} authUser auth user
  * @param {Array} groups challenge.groups
  */
-async function checkChallengeGroupAccess(authUser, groups) {
+async function checkChallengeGroupAccess (authUser, groups) {
   // allow admin user
   if (authUser.isMachine || hasAdminRole(authUser)) {
     return true
