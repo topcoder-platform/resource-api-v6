@@ -221,7 +221,7 @@ async function getMemberDetailsById (memberId) {
     return { memberId: profile.userId, email: profile.email, handle: profile.handle }
   } catch (e) {
     // fall back to v3 api...
-    logger.warn(`Get Member by Handle from DB Failed, trying v3 Members API. Error: ${JSON.stringify(e)}`)
+    logger.warn(`Get Member by userId from DB Failed, trying v3 Members API. Error: ${JSON.stringify(e)}`)
     return getMemberDetailsByIdFromMemberApi(memberId)
   }
 }
@@ -264,7 +264,7 @@ async function getMemberDetailsByIdFromMemberApi (userId) {
   let email
   let handle
   try {
-    logger.warn(`getMemberByHandle ${handle} from v5`)
+    logger.warn(`getMemberDetailsByIdFromMemberApi ${handle} from v5`)
     const res = await getRequest(`${config.MEMBER_API_URL}?userId=${userId}`)
     if (_.get(res, 'body[0].userId')) {
       memberId = String(res.body[0].userId)
