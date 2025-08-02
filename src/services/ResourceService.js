@@ -136,13 +136,35 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   const total = await prisma.resource.count(prismaFilter)
   const prismaQuery = {
     ...prismaFilter,
+    include: {
+      resourceRole: {
+        select: {
+          id: true,
+          name: true,
+          nameLower: true,
+          fullReadAccess: true,
+          fullWriteAccess: true,
+          isActive: true,
+          selfObtainable: true,
+          legacyId: true,
+          resourceRolePhaseDependencies: {
+            select: {
+              id: true,
+              phaseId: true,
+              resourceRoleId: true,
+              phaseState: true
+            }
+          }
+        }
+      }
+    },
     orderBy,
     skip: (page - 1) * perPage,
     take: perPage
   }
   let resources = await prisma.resource.findMany(prismaQuery)
   resources = _.map(resources, item => {
-    const ret = _.omit(item, 'updatedBy', 'updatedAt', 'createdAt')
+    const ret = _.omit(item, 'roleId', 'updatedBy', 'updatedAt', 'createdAt')
     ret.created = item.createdAt
     return ret
   })

@@ -36,7 +36,7 @@ module.exports = describe('Get resources', () => {
     should.equal(entity.challengeId, challengeId)
     should.equal(entity.memberId, expected.memberId)
     should.equal(entity.memberHandle.toLowerCase(), expected.memberHandle.toLowerCase())
-    should.equal(entity.roleId, expected.roleId)
+    should.equal(entity.roleId, expected.resourceRole.id)
     if (entity.memberHandle.toLowerCase() === 'hohosky') {
       if (entity.roleId === copilotRoleId) {
         hasCopilotRole = true
