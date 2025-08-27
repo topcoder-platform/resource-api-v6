@@ -10,23 +10,23 @@
  * This approach ensures performance and memory efficiency when handling real-world data.
  */
 
-const fs = require('fs');
-const { migrateMemberStats } = require('./migrateMemberStats');
-const { migrateMemberStats: migrateBatch } = require('./migrateMemberStatsBatch');
+const fs = require('fs')
+const { migrateMemberStats } = require('./migrateMemberStats')
+const { migrateMemberStats: migrateBatch } = require('./migrateMemberStatsBatch')
 
-const FILE_SIZE_THRESHOLD = 3 * 1024 * 1024; // 3 MB
+const FILE_SIZE_THRESHOLD = 3 * 1024 * 1024 // 3 MB
 
-async function migrateMemberStatsAuto(filePath) {
-  const stats = fs.statSync(filePath);
-  const fileSize = stats.size;
+async function migrateMemberStatsAuto (filePath) {
+  const stats = fs.statSync(filePath)
+  const fileSize = stats.size
 
   if (fileSize < FILE_SIZE_THRESHOLD) {
     // Using normal migration (in-memory)
-    await migrateMemberStats(filePath);
+    await migrateMemberStats(filePath)
   } else {
     // Using batch migration (streaming)
-    await migrateBatch(filePath);
+    await migrateBatch(filePath)
   }
 }
 
-module.exports = { migrateMemberStatsAuto };
+module.exports = { migrateMemberStatsAuto }

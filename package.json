@@ -68,6 +68,9 @@
   "standard": {
     "env": [
       "mocha"
+    ],
+    "ignore": [
+      "migrator/**"
     ]
   },
   "nyc": {
