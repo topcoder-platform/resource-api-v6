@@ -66,7 +66,6 @@ model Resource {
   memberId     String
   memberHandle String
   roleId       String
-  legacyId     Int?
   createdAt    DateTime @default(now())
   createdBy    String
   updatedAt    DateTime? @updatedAt
@@ -86,7 +85,7 @@ model ResourceRolePhaseDependency {
   phaseState     Boolean
   createdAt      DateTime     @default(now())
   createdBy      String
-  updatedAt      DateTime?    @updatedAt
+  updatedAt      DateTime?     @updatedAt
   updatedBy      String?
   resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])
 
