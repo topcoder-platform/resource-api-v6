@@ -146,7 +146,6 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
           fullWriteAccess: true,
           isActive: true,
           selfObtainable: true,
-          legacyId: true,
           resourceRolePhaseDependencies: {
             select: {
               id: true,
