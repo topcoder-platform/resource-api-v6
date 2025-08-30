@@ -64,3 +64,5 @@ typings/
 .next
 
 migrator/data
+
+src/scripts/seed/*.json
