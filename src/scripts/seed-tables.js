@@ -132,8 +132,8 @@ async function importResource () {
 }
 
 async function main () {
-  //await importResourceRole()
-  //await importResourceRolePhaseDependency()
+  await importResourceRole()
+  await importResourceRolePhaseDependency()
   await importResource()
 }
 
