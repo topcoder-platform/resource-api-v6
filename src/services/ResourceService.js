@@ -136,16 +136,6 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   const total = await prisma.resource.count(prismaFilter)
   const prismaQuery = {
     ...prismaFilter,
-    include: {
-      resourceRole: {
-        select: {
-          id: true,
-          name: true,
-          fullReadAccess: true,
-          fullWriteAccess: true
-        }
-      }
-    },
     orderBy,
     skip: (page - 1) * perPage,
     take: perPage
