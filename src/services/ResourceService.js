@@ -152,7 +152,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   }
   let resources = await prisma.resource.findMany(prismaQuery)
   resources = _.map(resources, item => {
-    const ret = _.omit(item, 'roleId', 'updatedBy', 'updatedAt', 'createdAt')
+    const ret = _.omit(item, 'updatedBy', 'updatedAt', 'createdAt')
     ret.created = item.createdAt
     return ret
   })
