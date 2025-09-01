@@ -230,7 +230,6 @@ async function getMemberDetailsByHandleFromV3Members (handle) {
   let memberId
   let email
   try {
-    logger.warn(`getMemberByHandle ${handle} from v5`)
     const res = await getRequest(`${config.MEMBER_API_URL}/${handle}`)
     if (_.get(res, 'body.userId')) {
       memberId = String(res.body.userId)
