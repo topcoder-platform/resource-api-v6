@@ -6,18 +6,16 @@
  * It is suitable for small datasets (e.g., test files, mocks), as it prioritizes clarity and simplicity over memory efficiency.
  */
 
-const fs = require('fs');
-const { loadJSON } = require('../clients/dynamoLoader');
 const prisma = require('../clients/prismaClient');
+const { batchMigrator } = require('../utils/batchMigrator');
 
 async function migrateResourceRole(filePath) {
-  const roles = await loadJSON(filePath);
-
-  let successCount = 0;
-  let failCount = 0;
-
-  for (const role of roles) {
-    try {
+  await batchMigrator({
+    filePath,
+    batchSize: 100,
+    label: 'ResourceRole',
+    errorLogFile: 'logs/resourcerole_errors.log',
+    handleRecord: async (role) => {
       const createdBy = role.createdBy || process.env.CREATED_BY;
       const fullReadAccess = role.fullReadAccess ?? (role.fullAccess ?? (process.env.DEFAULT_READ_ACCESS === 'true'));
       const fullWriteAccess = role.fullWriteAccess ?? (role.fullAccess ?? (process.env.DEFAULT_READ_ACCESS === 'true'));
@@ -54,16 +52,8 @@ async function migrateResourceRole(filePath) {
           updatedBy: role.updatedBy || null
         }
       });
-
-      successCount++;
-    } catch (err) {
-      failCount++;
-      const message = err.message.split('\n').at(-1);
-      fs.appendFileSync('logs/resourcerole_errors.log', `id=${role.id} - ${message}\n`);
     }
-  }
-
-  console.log(`✅ ResourceRole migration finished: ${successCount} success, ${failCount} failed`);
+  });
 }
 
 module.exports = { migrateResourceRole };

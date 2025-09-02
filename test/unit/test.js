@@ -1,7 +1,6 @@
 /**
  * Unit test of the Challenge Resource API.
  */
-
 process.env.NODE_ENV = 'test'
 
 require('../../app-bootstrap')
@@ -46,8 +45,6 @@ describe('Topcoder - Challenge Resource API Unit Test', () => {
     * Initialize database tables. All data will be cleared.
     */
   const initDB = async () => {
-    await prisma.memberStats.deleteMany()
-    await prisma.memberProfile.deleteMany()
     await prisma.resource.deleteMany()
     await prisma.resourceRolePhaseDependency.deleteMany()
     await prisma.resourceRole.deleteMany()
@@ -74,36 +71,6 @@ describe('Topcoder - Challenge Resource API Unit Test', () => {
     testHelper.initLogs(errorLogs)
 
     await initDB()
-
-    await prisma.memberStats.createMany({
-      data: [{
-        userId: 16096823,
-        handle: 'hohosky',
-        handleLower: 'hohosky',
-        maxRating: 2000,
-        createdBy: 'testdata'
-      }, {
-        userId: 251280,
-        handle: 'denis',
-        handleLower: 'denis',
-        maxRating: 0,
-        createdBy: 'testdata'
-      }]
-    })
-
-    await prisma.memberProfile.createMany({
-      data: [{
-        userId: 16096823,
-        handle: 'hohosky',
-        handleLower: 'hohosky',
-        createdBy: 'testdata'
-      }, {
-        userId: 251280,
-        handle: 'denis',
-        handleLower: 'denis',
-        createdBy: 'testdata'
-      }]
-    })
   })
 
   after(async () => {

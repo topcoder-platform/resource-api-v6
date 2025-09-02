@@ -22,8 +22,8 @@ module.exports = describe('List challenges by member', () => {
     observerRoleId = ret.observerRoleId
   })
 
-  it('get challenges hohosky can access', async () => {
-    const ret = await service.listChallengesByMember('16096823', {})
+  it('get challenges phead can access', async () => {
+    const ret = await service.listChallengesByMember('22742764', {})
     should.equal(ret.data.length, 1)
     should.equal(ret.data[0], challengeId1)
   })

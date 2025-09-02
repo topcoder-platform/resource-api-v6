@@ -153,11 +153,11 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   logger.info(`Retrieved member objects: ${JSON.stringify(memberObjects)}`)
   const completeResources = []
   for (const resource of resources) {
-    const memberInfo = _.find(memberObjects, (o) => _.toNumber(o.userId) === _.toNumber(resource.memberId))
+    const memberInfo = _.find(memberObjects, (o) => _.toNumber('' + o.userId) === _.toNumber(resource.memberId))
     if (memberInfo) {
       const completeResource = {
         ...resource,
-        rating: memberInfo.maxRating,
+        rating: memberInfo.maxRating ? memberInfo.maxRating.rating : undefined,
         memberHandle: memberInfo.handle
       }
       completeResources.push(completeResource)

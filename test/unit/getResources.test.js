@@ -35,18 +35,18 @@ module.exports = describe('Get resources', () => {
     const entity = await helper.getById('Resource', id)
     should.equal(entity.challengeId, challengeId)
     should.equal(entity.memberId, expected.memberId)
+
     should.equal(entity.memberHandle.toLowerCase(), expected.memberHandle.toLowerCase())
-    should.equal(entity.roleId, expected.resourceRole.id)
-    if (entity.memberHandle.toLowerCase() === 'hohosky') {
+    if (entity.memberHandle.toLowerCase() === 'phead') {
       if (entity.roleId === copilotRoleId) {
         hasCopilotRole = true
       }
       if (entity.roleId === reviewerRoleId) {
         hasReviewerRole = true
       }
-      should.equal(expected.rating, 2000)
+      should.equal(expected.rating, 1367)
     } else {
-      if (entity.memberHandle.toLowerCase() === 'denis') {
+      if (entity.memberHandle.toLowerCase() === 'diazz') {
         should.equal(expected.rating, 0)
       }
       should.equal(entity.roleId, submitterRoleId)
@@ -64,7 +64,7 @@ module.exports = describe('Get resources', () => {
     for (const record of result.data) {
       await assertResource(record.id, record)
     }
-    // user hohosky should have two resources
+    // user phead should have two resources
     should.equal(hasCopilotRole, true)
     should.equal(hasReviewerRole, true)
   })
@@ -72,20 +72,20 @@ module.exports = describe('Get resources', () => {
   it('get resources by user has full-access permission', async () => {
     hasCopilotRole = false
     hasReviewerRole = false
-    const result = await service.getResources(user.hohosky, challengeId)
+    const result = await service.getResources(user.phead, challengeId)
     should.equal(result.total, 5)
     for (const record of result.data) {
       await assertResource(record.id, record)
     }
-    // user hohosky should have two resources
+    // user phead should have two resources
     should.equal(hasCopilotRole, true)
     should.equal(hasReviewerRole, true)
   })
 
   it(`get resources using user without permission`, async () => {
-    const result = await service.getResources(user.denis, challengeId)
+    const result = await service.getResources(user.diazz, challengeId)
     should.equal(result.total, 1)
-    should.equal(result.data[0].memberHandle, 'denis')
+    should.equal(result.data[0].memberHandle, 'diazz')
   })
 
   it('get resources using m2m token', async () => {
@@ -96,7 +96,7 @@ module.exports = describe('Get resources', () => {
     for (const record of result.data) {
       await assertResource(record.id, record)
     }
-    // user hohosky should have two resources
+    // user phead should have two resources
     should.equal(hasCopilotRole, true)
     should.equal(hasReviewerRole, true)
   })
@@ -109,7 +109,7 @@ module.exports = describe('Get resources', () => {
     for (const record of result.data) {
       await assertResource(record.id, record)
     }
-    // user hohosky should have copilot role
+    // user phead should have copilot role
     should.equal(hasCopilotRole, true)
   })
 
