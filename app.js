@@ -20,7 +20,7 @@ const resourcesAPISwaggerDoc = YAML.load('./docs/swagger.yaml')
 const app = express()
 
 // serve resources V5 API swagger definition
-app.use('/v5/resources/docs', swaggerUi.serve, swaggerUi.setup(resourcesAPISwaggerDoc))
+app.use('/v6/resources/api-docs', swaggerUi.serve, swaggerUi.setup(resourcesAPISwaggerDoc))
 
 app.use(cors({
   // Allow browsers access pagination data in headers
