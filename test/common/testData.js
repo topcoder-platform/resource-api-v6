@@ -4,9 +4,9 @@
 
 const token = {
   admin: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIiwiQ29ubmVjdCBTdXBwb3J0IiwiYWRtaW5pc3RyYXRvciIsInRlc3RSb2xlIiwiYWFhIiwidG9ueV90ZXN0XzEiLCJDb25uZWN0IE1hbmFnZXIiLCJDb25uZWN0IEFkbWluIiwiY29waWxvdCIsIkNvbm5lY3QgQ29waWxvdCBNYW5hZ2VyIl0sImlzcyI6Imh0dHBzOi8vYXBpLnRvcGNvZGVyLWRldi5jb20iLCJoYW5kbGUiOiJUb255SiIsImV4cCI6MTY4MTA1MjIxMSwidXNlcklkIjoiODU0Nzg5OSIsImlhdCI6MTU0OTc5MTYxMSwiZW1haWwiOiJ0amVmdHMrZml4QHRvcGNvZGVyLmNvbSIsImp0aSI6ImY5NGQxZTI2LTNkMGUtNDZjYS04MTE1LTg3NTQ1NDRhMDhmMSJ9.ONh2RSE5NeJzyjBD68TSUdNFMs5v5BXtga4LchR2x3s',
-  denis: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIl0sImlzcyI6Imh0dHBzOi8vYXBpLnRvcGNvZGVyLWRldi5jb20iLCJoYW5kbGUiOiJkZW5pcyIsImV4cCI6MTY4MjgwMDE2OSwidXNlcklkIjoiMjUxMjgwIiwiaWF0IjoxNTQ5Nzk5NTY5LCJlbWFpbCI6ImVtYWlsQGRvbWFpbi5jb20ueiIsImp0aSI6IjljNDUxMWM1LWMxNjUtNGExYi04OTllLWI2NWFkMGUwMmI1NSJ9.BCF6xW3aQfHDDFbgGvvOKzvwEXVLWGf-TgF5JrtM9Tg',
-  hohosky: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIiwiY29waWxvdCJdLCJpc3MiOiJodHRwczovL2FwaS50b3Bjb2Rlci1kZXYuY29tIiwiaGFuZGxlIjoiaG9ob3NreSIsImV4cCI6MTY4MTc5MjM3MCwidXNlcklkIjoiMTYwOTY4MjMiLCJpYXQiOjE1NDk3OTE3NzAsImVtYWlsIjoiZW1haWxAZG9tYWluLmNvbS56IiwianRpIjoiZjFlNjEzYmUtZDViOS00MjMxLWJhYWUtZWU5ZjJkMjI3MjM0In0.YfzhT9rLFK6U2suPdiCSx_n7Ce6ZIt_oLZ0BcvfMqAk',
-  lars2520: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIl0sImlzcyI6Imh0dHBzOi8vYXBpLnRvcGNvZGVyLWRldi5jb20iLCJoYW5kbGUiOiJsYXJzMjUyMCIsImV4cCI6MTY4MjgwMDE2OSwidXNlcklkIjoiMjg3MTMxIiwiaWF0IjoxNTQ5Nzk5NTY5LCJlbWFpbCI6ImVtYWlsQGRvbWFpbi5jb20ueiIsImp0aSI6IjljNDUxMWM1LWMxNjUtNGExYi04OTllLWI2NWFkMGUwMmI1NSJ9.QIXF4-qSkH7n-i0_4mzF3peFTZ5PjaSYHjm9EjhTfS4',
+  diazz: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIl0sImlzcyI6Imh0dHBzOi8vYXBpLnRvcGNvZGVyLWRldi5jb20iLCJoYW5kbGUiOiJkaWF6eiIsImV4cCI6MTc4MjgwMDE2OSwidXNlcklkIjoiNDAxNTQ3ODIiLCJpYXQiOjE1NDk3OTk1NjksImVtYWlsIjoiZW1haWxAZG9tYWluLmNvbS56IiwianRpIjoiOWM0NTExYzUtYzE2NS00YTFiLTg5OWUtYjY1YWQwZTAyYjU1In0.xUOFlly1dpfinkR9t4y_QsrnoIykgzgx0q5u8Re-0Qw',
+  phead: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIiwiY29waWxvdCJdLCJpc3MiOiJodHRwczovL2FwaS50b3Bjb2Rlci1kZXYuY29tIiwiaGFuZGxlIjoicGhlYWQiLCJleHAiOjE3ODE3OTIzNzAsInVzZXJJZCI6IjIyNzQyNzY0IiwiaWF0IjoxNTQ5NzkxNzcwLCJlbWFpbCI6ImVtYWlsQGRvbWFpbi5jb20ueiIsImp0aSI6ImYxZTYxM2JlLWQ1YjktNDIzMS1iYWFlLWVlOWYyZDIyNzIzNCJ9.jzmyU45yZbtu45u3IXIDG1cIpxWvGxUDPPFjC42s3YY',
+  lunarkid: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJUb3Bjb2RlciBVc2VyIl0sImlzcyI6Imh0dHBzOi8vYXBpLnRvcGNvZGVyLWRldi5jb20iLCJoYW5kbGUiOiJsdW5hcmtpZCIsImV4cCI6MTc4MjgwMDE2OSwidXNlcklkIjoiMjI3MDY4NzMiLCJpYXQiOjE1NDk3OTk1NjksImVtYWlsIjoiZW1haWxAZG9tYWluLmNvbS56IiwianRpIjoiOWM0NTExYzUtYzE2NS00YTFiLTg5OWUtYjY1YWQwZTAyYjU1In0.Xe1ucyVBHmqWZO7kPW6JKeGr1GO2RfZcG0_MMfnD8B0',
   m2m: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3RvcGNvZGVyLWRldi5hdXRoMC5jb20vIiwic3ViIjoiZW5qdzE4MTBlRHozWFR3U08yUm4yWTljUVRyc3BuM0JAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vbTJtLnRvcGNvZGVyLWRldi5jb20vIiwiaWF0IjoxNTUwOTA2Mzg4LCJleHAiOjE2ODA5OTI3ODgsImF6cCI6ImVuancxODEwZUR6M1hUd1NPMlJuMlk5Y1FUcnNwbjNCIiwic2NvcGUiOiJhbGw6cmVzb3VyY2VzIGFsbDpyZXNvdXJjZV9yb2xlcyIsImd0eSI6ImNsaWVudC1jcmVkZW50aWFscyJ9.UhuqMGrrNzj-VQz2-BogN28YZTE9uauIfdP7EOhrKB0',
   m2mRead: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3RvcGNvZGVyLWRldi5hdXRoMC5jb20vIiwic3ViIjoiZW5qdzE4MTBlRHozWFR3U08yUm4yWTljUVRyc3BuM0JAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vbTJtLnRvcGNvZGVyLWRldi5jb20vIiwiaWF0IjoxNTUwOTA2Mzg4LCJleHAiOjE2ODA5OTI3ODgsImF6cCI6ImVuancxODEwZUR6M1hUd1NPMlJuMlk5Y1FUcnNwbjNCIiwic2NvcGUiOiJyZWFkOnJlc291cmNlcyIsImd0eSI6ImNsaWVudC1jcmVkZW50aWFscyJ9.1EdekIx1jU2lDSIXlMFCPmXkzLWQ_ZvxPuutQWuTKu0',
   m2mModify: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3RvcGNvZGVyLWRldi5hdXRoMC5jb20vIiwic3ViIjoiZW5qdzE4MTBlRHozWFR3U08yUm4yWTljUVRyc3BuM0JAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vbTJtLnRvcGNvZGVyLWRldi5jb20vIiwiaWF0IjoxNTUwOTA2Mzg4LCJleHAiOjE2ODA5OTI3ODgsImF6cCI6ImVuancxODEwZUR6M1hUd1NPMlJuMlk5Y1FUcnNwbjNCIiwic2NvcGUiOiJjcmVhdGU6cmVzb3VyY2VzIGRlbGV0ZTpyZXNvdXJjZXMgdXBkYXRlOnJlc291cmNlcyIsImd0eSI6ImNsaWVudC1jcmVkZW50aWFscyJ9.f_3FLT3jMTnKwGIg8fcFP2lmShy5S9d5IvLNbXSj2Eo',
@@ -35,32 +35,32 @@ const user = {
     email: 'tjefts+fix@topcoder.com',
     jti: 'f94d1e26-3d0e-46ca-8115-8754544a08f1'
   },
-  denis: {
+  diazz: {
     roles: [ 'Topcoder User' ],
     iss: 'https://api.topcoder-dev.com',
-    handle: 'denis',
+    handle: 'diazz',
     exp: 1562800169,
-    userId: '251280',
+    userId: '40154782',
     iat: 1549799569,
     email: 'email@domain.com.z',
     jti: '9c4511c5-c165-4a1b-899e-b65ad0e02b55'
   },
-  hohosky: {
+  phead: {
     roles: [ 'Topcoder User', 'copilot' ],
     iss: 'https://api.topcoder-dev.com',
-    handle: 'hohosky',
+    handle: 'phead',
     exp: 1561792370,
-    userId: '16096823',
+    userId: '22742764',
     iat: 1549791770,
     email: 'email@domain.com.z',
     jti: 'f1e613be-d5b9-4231-baae-ee9f2d227234'
   },
-  lars2520: {
+  lunarkid: {
     roles: [ 'Topcoder User' ],
     iss: 'https://api.topcoder-dev.com',
-    handle: 'lars2520',
+    handle: 'lunarkid',
     exp: 1561792370,
-    userId: '287131',
+    userId: '22706873',
     iat: 1549791770,
     email: 'email@domain.com.z',
     jti: 'f1e613be-d5b9-4231-baae-ee9f2d227234'

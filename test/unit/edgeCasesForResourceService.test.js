@@ -14,8 +14,8 @@ module.exports = describe('Edge cases for resource service', () => {
     should.equal(result.total, 0)
   })
 
-  it('get challenges hohosky can access - DB is fresh', async () => {
-    const ret = await service.listChallengesByMember('16096823', {})
+  it('get challenges phead can access - DB is fresh', async () => {
+    const ret = await service.listChallengesByMember('22742764', {})
     should.equal(ret.data.length, 0)
   })
 })

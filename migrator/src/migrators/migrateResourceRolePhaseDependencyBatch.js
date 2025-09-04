@@ -6,21 +6,18 @@
  * It is suitable for small datasets (e.g., test files, mocks), as it prioritizes clarity and simplicity over memory efficiency.
  */
 
-const fs = require('fs');
-const { loadJSON } = require('../clients/dynamoLoader');
 const prisma = require('../clients/prismaClient');
+const { batchMigrator } = require('../utils/batchMigrator');
 
 async function migrateResourceRolePhaseDependency(filePath) {
-  const records = await loadJSON(filePath);
-
-  let successCount = 0;
-  let failCount = 0;
-
-  for (const record of records) {
-    try {
+  await batchMigrator({
+    filePath,
+    batchSize: 100,
+    label: 'ResourceRolePhaseDependency',
+    errorLogFile: 'logs/rrpd_errors.log',
+    handleRecord: async (record) => {
       const createdBy = record.createdBy || process.env.CREATED_BY;
       const phaseState = record.phaseState ?? (process.env.DEFAULT_PHASE_STATE === 'true');
-      
 
       await prisma.resourceRolePhaseDependency.upsert({
         where: { id: record.id },
@@ -44,15 +41,8 @@ async function migrateResourceRolePhaseDependency(filePath) {
           updatedBy: record.updatedBy || null
         }
       });
-      successCount++;
-    } catch (err) {
-      failCount++;
-      const message = err.message.split('\n').at(-1);
-      fs.appendFileSync('logs/rrpd_errors.log', `id=${record.id} - ${message}\n`);
     }
-  }
-
-  console.log(`✅ ResourceRolePhaseDependency migration finished: ${successCount} success, ${failCount} failed`);
+  });
 }
 
 module.exports = { migrateResourceRolePhaseDependency };

@@ -1,6 +1,7 @@
 /**
  * This file defines helper methods
  */
+const { PrismaClient } = require('@prisma/client-member')
 
 const _ = require('lodash')
 const config = require('config')
@@ -17,6 +18,7 @@ const busApiClient = busApi(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKE
   'AUTH0_CLIENT_SECRET', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC', 'AUTH0_PROXY_SERVER_URL']))
 
 const prisma = require('./prisma').getClient()
+const prismaMember = new PrismaClient()
 
 /**
  * Check the error is custom error.
@@ -161,7 +163,7 @@ async function getById (modelName, id) {
  * @returns {Promise<[]>}
  */
 async function getMemberInfoByIdList (idList) {
-  return prisma.memberStats.findMany({ where: { userId: { in: idList } } })
+  return prismaMember.member.findMany({ where: { userId: { in: idList } }, include: { maxRating: true } })
 }
 
 /**
@@ -171,12 +173,9 @@ async function getMemberInfoByIdList (idList) {
  */
 async function getMemberDetailsByHandle (handle) {
   try {
-    const profile = await prisma.memberProfile.findUnique({
+    const profile = await prismaMember.member.findUnique({
       where: {
-        handle_handleLower: {
-          handle,
-          handleLower: _.toLower(handle)
-        }
+        handleLower: _.toLower(handle)
       },
       select: {
         userId: true,
@@ -205,7 +204,7 @@ async function getMemberDetailsById (memberId) {
     return null
   }
   try {
-    const profile = await prisma.memberProfile.findUnique({
+    const profile = await prismaMember.member.findUnique({
       where: {
         userId: _.toNumber(memberId)
       },

@@ -2,9 +2,6 @@ const logger = require('../common/logger')
 const prisma = require('../common/prisma').getClient()
 
 async function main () {
-  logger.debug('Clearing Member data')
-  await prisma.memberProfile.deleteMany({})
-  await prisma.memberStats.deleteMany({})
   logger.debug('Clearing Resource data')
   await prisma.resource.deleteMany({})
   logger.debug('Clearing ResourceRolePhaseDependency data')

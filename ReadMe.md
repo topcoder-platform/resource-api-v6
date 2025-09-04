@@ -68,7 +68,7 @@ Configuration for testing is at `config/test.js`, only add such new configuratio
 - COPILOT_CREDENTIALS_PASSWORD: The user's password with copilot role
 - USER_CREDENTIALS_USERNAME: The user's username with user role
 - USER_CREDENTIALS_PASSWORD: The user's password with user role
-- AUTOMATED_TESTING_REPORTERS_FORMAT: indicates reporters format. It is an array of the formats. e.g. `['html']` produces html format. `['cli', 'json', 'junit', 'html']` is the full format.   
+- AUTOMATED_TESTING_REPORTERS_FORMAT: indicates reporters format. It is an array of the formats. e.g. `['html']` produces html format. `['cli', 'json', 'junit', 'html']` is the full format.
 *For the details of the supported format, please refer to https://www.npmjs.com/package/newman#reporters*.
 
 ## Available commands
@@ -106,15 +106,16 @@ You can also use docker to start it directly.
 ```bash
 docker pull postgres:16.8
 
-docker run -d --name resourcedb -p 5432:5432 \
-  -e POSTGRES_USER=johndoe -e POSTGRES_DB=resourcedb \
+docker run -d --name resourceapi -p 5532:5432 \
+  -e POSTGRES_USER=johndoe -e POSTGRES_DB=resourceapi \
   -e POSTGRES_PASSWORD=mypassword \
   postgres:16.8
 ```
 
 After that, please run
 ```bash
-export DATABASE_URL="postgresql://johndoe:mypassword@localhost:5432/resourcedb?schema=public&statement_timeout=60000"
+export DATABASE_URL="postgresql://johndoe:mypassword@localhost:5532/resourceapi?schema=public&statement_timeout=60000"
+export MEMBER_DB_URL="postgresql://johndoe:mypassword@localhost:5632/memberdb"
 ```
 
 ### Create Tables

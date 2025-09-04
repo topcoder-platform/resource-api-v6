@@ -35,10 +35,10 @@ async function migrateResource(filePath) {
           memberId: data.memberId,
           memberHandle: data.memberHandle,
           roleId: data.roleId,
-          createdAt: new Date(data.created),
+          createdAt: data.created ? new Date(data.created) : new Date(),
           createdBy,
-          updatedAt: null,
-          updatedBy: null
+          updatedAt: data.updatedAt ? new Date(data.updatedAt) : null,
+          updatedBy: data.updatedBy || null
         },
         create: {
           id: data.id,
@@ -46,10 +46,10 @@ async function migrateResource(filePath) {
           memberId: data.memberId,
           memberHandle: data.memberHandle,
           roleId: data.roleId,
-          createdAt: new Date(data.created),
+          createdAt: data.created ? new Date(data.created) : new Date(),
           createdBy,
-          updatedAt: null,
-          updatedBy: null
+          updatedAt: data.updatedAt ? new Date(data.updatedAt) : null,
+          updatedBy: data.updatedBy || null
         }
       });
 

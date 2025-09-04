@@ -102,9 +102,9 @@ const mockChallengeApi = http.createServer((req, res) => {
       const handle = list1[3]
       const userIds = {
         'ghostar': 151743,
-        'lars2520': 287131,
-        'denis': 251280,
-        'hohosky': 16096823
+        'lunarkid': 22706873,
+        'diazz': 40154782,
+        'phead': 22742764
       }
       // return 404 for user '123abcx'
       if (handle === '123abcx') {

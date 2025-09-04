@@ -26,13 +26,13 @@ module.exports = describe('Delete resource', () => {
   })
 
   it(`failure - delete resource that user doesn't have`, async () => {
-    const entity = resources.createBody('HoHosky', observerRoleId, challengeId)
+    const entity = resources.createBody('phead', observerRoleId, challengeId)
     try {
       await service.deleteResource(user.m2m, entity)
       throw new Error('should not throw error here')
     } catch (err) {
       should.equal(err.name, 'NotFoundError')
-      assertError(err, `User HoHosky doesn't have resource with roleId: ${observerRoleId} in challenge ${challengeId}`)
+      assertError(err, `User phead doesn't have resource with roleId: ${observerRoleId} in challenge ${challengeId}`)
     }
   })
 
@@ -98,9 +98,9 @@ module.exports = describe('Delete resource', () => {
   }
 
   it(`failure - delete resource with user without permission`, async () => {
-    const entity = resources.createBody('lars2520', submitterRoleId, challengeId)
+    const entity = resources.createBody('lunarkid', submitterRoleId, challengeId)
     try {
-      await service.deleteResource(user.denis, entity)
+      await service.deleteResource(user.diazz, entity)
       throw new Error('should not throw error here')
     } catch (err) {
       should.equal(err.name, 'ForbiddenError')
@@ -109,9 +109,9 @@ module.exports = describe('Delete resource', () => {
   })
 
   it(`failure - delete self obtainable resource for other user by normal user forbidden`, async () => {
-    const entity = resources.createBody('lars2520', submitterRoleId, challengeId)
+    const entity = resources.createBody('lunarkid', submitterRoleId, challengeId)
     try {
-      await service.deleteResource(user.denis, entity)
+      await service.deleteResource(user.diazz, entity)
       throw new Error('should not throw error here')
     } catch (err) {
       should.equal(err.name, 'ForbiddenError')
@@ -149,8 +149,8 @@ module.exports = describe('Delete resource', () => {
   })
 
   it('delete resource by user', async () => {
-    const data = resources.createBody('DENIS', submitterRoleId, challengeId)
-    const ret = await service.deleteResource(user.hohosky, data)
+    const data = resources.createBody('DIAZZ', submitterRoleId, challengeId)
+    const ret = await service.deleteResource(user.phead, data)
     should.exist(ret.id)
     try {
       await helper.getById('Resource', ret.id)
@@ -160,14 +160,14 @@ module.exports = describe('Delete resource', () => {
     }
     should.equal(ret.challengeId, challengeId)
     should.exist(ret.memberId)
-    should.equal(ret.memberHandle.toLowerCase(), 'denis')
+    should.equal(ret.memberHandle.toLowerCase(), 'diazz')
     should.equal(ret.roleId, submitterRoleId)
     should.exist(ret.created)
-    should.equal(ret.createdBy.toLowerCase(), '251280')
+    should.equal(ret.createdBy.toLowerCase(), '40154782')
   })
 
   it('delete resource by admin', async () => {
-    const data = resources.createBody('HoHoSKY', copilotRoleId, challengeId)
+    const data = resources.createBody('phead', copilotRoleId, challengeId)
     const ret = await service.deleteResource(user.admin, data)
     should.exist(ret.id)
     try {
@@ -178,15 +178,15 @@ module.exports = describe('Delete resource', () => {
     }
     should.equal(ret.challengeId, challengeId)
     should.exist(ret.memberId)
-    should.equal(ret.memberHandle.toLowerCase(), 'hohosky')
+    should.equal(ret.memberHandle.toLowerCase(), 'phead')
     should.equal(ret.roleId, copilotRoleId)
     should.exist(ret.created)
-    should.equal(ret.createdBy.toLowerCase(), '16096823')
+    should.equal(ret.createdBy.toLowerCase(), '22742764')
   })
 
   it(`delete self obtainable resource by user itself`, async () => {
-    const data = resources.createBody('lars2520', submitterRoleId, challengeId)
-    const ret = await service.deleteResource(user.lars2520, data)
+    const data = resources.createBody('lunarkid', submitterRoleId, challengeId)
+    const ret = await service.deleteResource(user.lunarkid, data)
     should.exist(ret.id)
     try {
       await helper.getById('Resource', ret.id)
@@ -196,9 +196,9 @@ module.exports = describe('Delete resource', () => {
     }
     should.equal(ret.challengeId, challengeId)
     should.exist(ret.memberId)
-    should.equal(ret.memberHandle.toLowerCase(), 'lars2520')
+    should.equal(ret.memberHandle.toLowerCase(), 'lunarkid')
     should.equal(ret.roleId, submitterRoleId)
     should.exist(ret.created)
-    should.equal(ret.createdBy.toLowerCase(), '287131')
+    should.equal(ret.createdBy.toLowerCase(), '22706873')
   })
 })
