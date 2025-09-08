@@ -2,6 +2,7 @@
  * This file defines helper methods
  */
 const { PrismaClient } = require('@prisma/client-member')
+const { PrismaClient: ChallengePrismaClient } = require('@prisma/client-challenge')
 
 const _ = require('lodash')
 const config = require('config')
@@ -19,6 +20,7 @@ const busApiClient = busApi(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKE
 
 const prisma = require('./prisma').getClient()
 const prismaMember = new PrismaClient()
+const prismaChallenge = new ChallengePrismaClient()
 
 /**
  * Check the error is custom error.
@@ -545,5 +547,7 @@ module.exports = {
   checkChallengeGroupAccess,
   checkAgreedTerms,
   postRequest,
-  advanceChallengePhase
+  advanceChallengePhase,
+  // Challenge DB client (exported for targeted updates)
+  prismaChallenge
 }

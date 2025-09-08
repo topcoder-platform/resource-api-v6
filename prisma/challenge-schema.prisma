@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client-challenge" // Relative path from this file to root node_modules
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CHALLENGE_DB_URL")
+}
+
+model Challenge {
+  id                String @id @default(uuid())
+  numOfRegistrants  Int    @default(0)
+}
+

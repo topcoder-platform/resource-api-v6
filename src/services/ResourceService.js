@@ -395,6 +395,17 @@ async function createResource (currentUser, resource) {
 
     logger.debug(`Created resource: ${JSON.stringify(ret)}`)
     await helper.postEvent(config.RESOURCE_CREATE_TOPIC, ret)
+    // Increment challenge registrants on submitter registration
+    if (resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID) {
+      try {
+        await helper.prismaChallenge.challenge.update({
+          where: { id: challengeId },
+          data: { numOfRegistrants: { increment: 1 } }
+        })
+      } catch (e) {
+        logger.warn(`Failed to increment numOfRegistrants for challenge ${challengeId}: ${e}`)
+      }
+    }
     if (!_.get(challenge, 'task.isTask', false) && resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID) {
       const forumUrl = _.get(challenge, 'discussions[0].url')
       let templateId = config.REGISTRATION_EMAIL.SENDGRID_TEMPLATE_ID
@@ -487,6 +498,17 @@ async function deleteResource (currentUser, resource) {
 
     logger.debug(`Deleted resource, posting to Bus API: ${JSON.stringify(ret)}`)
     await helper.postEvent(config.RESOURCE_DELETE_TOPIC, ret)
+    // Decrement challenge registrants on submitter unregistration
+    if (resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID) {
+      try {
+        await helper.prismaChallenge.challenge.update({
+          where: { id: challengeId },
+          data: { numOfRegistrants: { decrement: 1 } }
+        })
+      } catch (e) {
+        logger.warn(`Failed to decrement numOfRegistrants for challenge ${challengeId}: ${e}`)
+      }
+    }
     return ret
   } catch (err) {
     logger.error(`Delete Resource Error ${JSON.stringify(err)}`)
