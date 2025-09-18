@@ -227,6 +227,31 @@ async function getMemberDetailsById (memberId) {
   }
 }
 
+/**
+ * Fetch challenge information from the challenge database and optionally from the Challenge API.
+ * Uses the Prisma challenge client to ensure the challenge exists before pulling additional details.
+ *
+ * @param {String} challengeId the challenge id
+ * @param {Object} [options] optional parameters
+ * @param {Boolean} [options.includeDetails=false] whether to fetch full challenge details from the API
+ * @returns {Promise<Object>} the challenge record or detailed Challenge API payload
+ */
+async function getChallengeById (challengeId, options = {}) {
+  const { includeDetails = false } = options
+  const challengeRecord = await prismaChallenge.challenge.findUnique({ where: { id: challengeId } })
+
+  if (!challengeRecord) {
+    throw new errors.NotFoundError(`Challenge ID ${challengeId} not found`)
+  }
+
+  if (!includeDetails) {
+    return challengeRecord
+  }
+
+  const response = await getRequest(`${config.CHALLENGE_API_URL}/${challengeId}`)
+  return _.get(response, 'body', null)
+}
+
 async function getMemberDetailsByHandleFromV3Members (handle) {
   let memberId
   let email
@@ -264,7 +289,7 @@ async function getMemberDetailsByIdFromMemberApi (userId) {
   let email
   let handle
   try {
-    logger.warn(`getMemberDetailsByIdFromMemberApi ${handle} from v5`)
+    logger.warn(`getMemberDetailsByIdFromMemberApi ${handle} from v6`)
     const res = await getRequest(`${config.MEMBER_API_URL}?userId=${userId}`)
     if (_.get(res, 'body[0].userId')) {
       memberId = String(res.body[0].userId)
@@ -548,6 +573,7 @@ module.exports = {
   checkAgreedTerms,
   postRequest,
   advanceChallengePhase,
+  getChallengeById,
   // Challenge DB client (exported for targeted updates)
   prismaChallenge
 }

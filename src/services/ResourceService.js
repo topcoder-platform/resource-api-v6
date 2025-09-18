@@ -65,7 +65,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   if (challengeId) {
     try {
       // Verify that the challenge exists
-      await helper.getRequest(`${config.CHALLENGE_API_URL}/${challengeId}`, { checkIfExists: 'true' })
+      await helper.getChallengeById(challengeId)
     } catch (e) {
       throw new errors.NotFoundError(`Challenge ID ${challengeId} not found`)
     }
@@ -221,8 +221,7 @@ async function getResourceRole (roleId, isCreated) {
  */
 async function init (currentUser, challengeId, resource, isCreated) {
   // Verify that the challenge exists
-  const challengeRes = await helper.getRequest(`${config.CHALLENGE_API_URL}/${challengeId}`)
-  const challenge = challengeRes.body
+  const challenge = await helper.getChallengeById(challengeId, { includeDetails: true })
 
   if (_.get(challenge, 'status') === constants.ChallengeStatuses.Completed && !isCreated) {
     throw new errors.BadRequestError('Cannot delete resources of a completed challenge!')
