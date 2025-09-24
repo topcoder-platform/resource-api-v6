@@ -19,7 +19,7 @@ const resourcesAPISwaggerDoc = YAML.load('./docs/swagger.yaml')
 // setup express app
 const app = express()
 
-// serve resources V5 API swagger definition
+// serve resources V6 API swagger definition
 app.use('/v6/resources/api-docs', swaggerUi.serve, swaggerUi.setup(resourcesAPISwaggerDoc))
 
 app.use(cors({

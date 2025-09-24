@@ -1,24 +1,25 @@
 swagger: '2.0'
 info:
-  title: V5 Challenge Resource API
-  description: >
-    ## Security constraints
+  title: V6 Challenge Resource API
+  description: |
+    ## Overview
+    The Challenge Resource API v6 manages challenge resource assignments, resource roles,
+    and their phase dependencies. Use these endpoints to look up or manage the members
+    attached to a challenge and to maintain the metadata that controls resource behavior.
 
+    ## Authentication
+    Each endpoint description calls out the requirements for two supported token types:
 
-    GET/POST/DELETE `/Resources` endpoints can only be called from admins, via
-    M2M, or users for whom there is at least one existing `Resource` where
-    `role.fullReadAccess`, `role.fullWriteAccess` and `role.isActive` are `true`.
-    Special Case: User can create/delte selfObtainable resource for its own.
+    - **JWT (user) tokens**: Accepted Topcoder roles are listed for every operation. A
+      request succeeds only when the authenticated user's roles include one of those
+      values.
+    - **M2M (machine) tokens**: Supply the scopes identified for the operation. Scopes
+      configured by default are `read:resources`, `create:resources`, `update:resources`,
+      `delete:resources`, and `all:resources`.
 
-    `Resource Roles` POST and PUT endpoints can only be called from admins or
-    via M2M.
-
-    GET `/Resources/{memberId}/challenges` endpoints can be called from any
-    authenticated user or via M2M.
-
-    Resource role phase dependencies APIs can only be called from admins or M2M
-    with valid scopes.
-  version: 1.0.0
+    Unless otherwise noted, endpoints expect an `Authorization: Bearer <token>` header.
+    All routes are served under the `/v6` base path.
+  version: 6.0.0
 host: api.topcoder.com
 securityDefinitions:
   Bearer:
@@ -28,15 +29,19 @@ securityDefinitions:
 schemes:
   - http
   - https
-basePath: /v5
+basePath: /v6
 produces:
   - application/json
 consumes:
   - application/json
 paths:
-  /health:
+  /resources/health:
     get:
-      description: Health check endpoint
+      description: |
+        Returns a lightweight health summary that can be used for monitoring.
+
+        ### Authentication
+        - Not required.
       tags:
         - Health
       responses:
@@ -52,7 +57,13 @@ paths:
           $ref: '#/definitions/ServiceUnavailable'
   /resources:
     get:
-      description: Get all resources for a challenge
+      description: |
+        Retrieve resources assigned to a challenge with optional filtering and sorting.
+
+        ### Authentication
+        - JWT roles: `administrator`, `copilot`, `Connect Manager`, `Topcoder User`
+        - M2M scopes: `read:resources`, `all:resources`
+        - Notes: Authentication is optional, but any supplied token must meet these requirements.
       tags:
         - Resources
       security:
@@ -108,9 +119,13 @@ paths:
         '500':
           $ref: '#/definitions/ServerError'
     post:
-      description: >-
+      description: |
         Create a new resource for a challenge. Verify that the challenge exists
-        by calling the **/v5/challenges/{id}** endpoint using an M2M token.
+        by calling the **/v6/challenges/{id}** endpoint using an M2M token.
+
+        ### Authentication
+        - JWT roles: `administrator`, `copilot`, `Connect Manager`, `Topcoder User`
+        - M2M scopes: `create:resources`, `all:resources`
       tags:
         - Resources
       security:
@@ -139,7 +154,12 @@ paths:
         '500':
           $ref: '#/definitions/ServerError'
     delete:
-      description: Delete a resource from a challenge
+      description: |
+        Delete a resource from a challenge.
+
+        ### Authentication
+        - JWT roles: `administrator`, `copilot`, `Connect Manager`, `Topcoder User`
+        - M2M scopes: `delete:resources`, `all:resources`
       tags:
         - Resources
       security:
@@ -165,9 +185,78 @@ paths:
           $ref: '#/definitions/NotFound'
         '500':
           $ref: '#/definitions/ServerError'
+  /resources/count:
+    get:
+      description: |
+        Return the number of resources assigned to a challenge, optionally filtered by role.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `read:resources`, `all:resources`
+      tags:
+        - Resources
+      security:
+        - Bearer: []
+      parameters:
+        - name: challengeId
+          type: string
+          description: The challenge id to inspect.
+          format: UUID
+          in: query
+          required: true
+        - name: roleId
+          type: string
+          description: Optional resource role id filter.
+          format: UUID
+          in: query
+      responses:
+        '200':
+          description: OK - the request was successful
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: Number of matching resources.
+        '400':
+          $ref: '#/definitions/BadRequest'
+        '401':
+          $ref: '#/definitions/Unauthorized'
+        '403':
+          $ref: '#/definitions/Forbidden'
+        '404':
+          $ref: '#/definitions/NotFound'
+        '500':
+          $ref: '#/definitions/ServerError'
+  /resources/internal/jobs/clean:
+    post:
+      description: |
+        Remove non-production resource data created during automated testing.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `all:resources`
+      tags:
+        - Resources
+      security:
+        - Bearer: []
+      responses:
+        '200':
+          description: OK - the cleanup request succeeded
+        '401':
+          $ref: '#/definitions/Unauthorized'
+        '403':
+          $ref: '#/definitions/Forbidden'
+        '500':
+          $ref: '#/definitions/ServerError'
   '/resources/{memberId}/challenges':
     get:
-      description: List all challenges that given topcoder member has access to.
+      description: |
+        List the challenge IDs that the specified Topcoder member currently has access to.
+
+        ### Authentication
+        - JWT roles: `administrator`, `copilot`, `Connect Manager`, `Topcoder User`
+        - M2M scopes: `read:resources`, `all:resources`
       tags:
         - Resources
       security:
@@ -204,13 +293,13 @@ paths:
           $ref: '#/definitions/ServerError'
   /resource-roles:
     get:
-      description: >-
-        Get all resource roles. If isActive parameter is provided, filter the
-        results by the set properties.
+      description: |
+        Get all resource roles. If filter parameters are provided, the results reflect those values.
+
+        ### Authentication
+        - Not required.
       tags:
         - Resource Roles
-      security:
-        - Bearer: []
       parameters:
         - name: isActive
           type: boolean
@@ -228,10 +317,14 @@ paths:
           type: boolean
           in: query
           description: Filters the results based on the `selfObtainable` property
-        - name: fullAccess
+        - name: fullReadAccess
           type: boolean
           in: query
-          description: Filters the results based on the `fullAccess` property
+          description: Filters the results based on the `fullReadAccess` property
+        - name: fullWriteAccess
+          type: boolean
+          in: query
+          description: Filters the results based on the `fullWriteAccess` property
       responses:
         '200':
           description: OK - the request was successful
@@ -250,7 +343,10 @@ paths:
     post:
       description: |
         Create a new resource role.
-        Only admins can call this endpoint.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `create:resources`, `all:resources`
       tags:
         - Resource Roles
       security:
@@ -280,7 +376,10 @@ paths:
     put:
       description: |
         Update an existing resource role.
-        Only admins can call this endpoint.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `update:resources`, `all:resources`
       tags:
         - Resource Roles
       security:
@@ -313,9 +412,14 @@ paths:
           $ref: '#/definitions/Conflict'
         '500':
           $ref: '#/definitions/ServerError'
-  /resource-roles/Phase-dependencies:
+  /resource-roles/phase-dependencies:
     get:
-      description: Get resource role phase dependencies
+      description: |
+        Get resource role phase dependencies.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `read:resources`, `all:resources`
       tags:
         - Resource Role Phase Dependencies
       security:
@@ -356,7 +460,12 @@ paths:
         '500':
           $ref: '#/definitions/ServerError'
     post:
-      description: Create a new resource role phase dependency.
+      description: |
+        Create a new resource role phase dependency.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `create:resources`, `all:resources`
       tags:
         - Resource Role Phase Dependencies
       security:
@@ -384,10 +493,14 @@ paths:
           $ref: '#/definitions/Conflict'
         '500':
           $ref: '#/definitions/ServerError'
-  '/resource-roles/Phase-dependencies/{id}':
+  '/resource-roles/phase-dependencies/{id}':
     put:
       description: |
         Update an existing resource role phase dependency.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `update:resources`, `all:resources`
       tags:
         - Resource Role Phase Dependencies
       security:
@@ -422,7 +535,12 @@ paths:
         '500':
           $ref: '#/definitions/ServerError'
     delete:
-      description: Delete a resource role phase dependency
+      description: |
+        Delete a resource role phase dependency.
+
+        ### Authentication
+        - JWT roles: `administrator`
+        - M2M scopes: `delete:resources`, `all:resources`
       tags:
         - Resource Role Phase Dependencies
       security:
@@ -511,7 +629,7 @@ definitions:
     type: object
     required:
       - name
-      - fullReadccess
+      - fullReadAccess
       - fullWriteAccess
       - isActive
       - selfObtainable
