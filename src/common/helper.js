@@ -357,7 +357,7 @@ async function validateDuplicate (modelName, queryParams, errorMessage) {
  */
 async function getRequest (url, query) {
   const m2mToken = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
-  logger.debug(`GET ${url} with query ${JSON.stringify(query)}`);
+  logger.debug(`GET ${url} with query ${JSON.stringify(query)}`)
   return request
     .get(url)
     .set('Authorization', `Bearer ${m2mToken}`)
