@@ -295,7 +295,8 @@ async function init (currentUser, challengeId, resource, isCreated) {
   if (isCreated && (resource.roleId === config.REVIEWER_RESOURCE_ROLE_ID || resource.roleId === config.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID)) {
     const submissionsRes = await helper.getRequest(`${config.SUBMISSIONS_API_URL}`, { challengeId: challengeId, perPage: 100, memberId: memberId })
     const submissions = submissionsRes.body
-    if (submissions.length !== 0) {
+    logger.debug(`Submissions made by member ${memberId} in challenge ${challengeId}: ${JSON.stringify(submissions)}`)
+    if (submissions.meta.totalCount !== 0) {
       throw new errors.ConflictError(`The member has already submitted to the challenge and cannot have a Reviewer or Iterative Reviewer role`)
     }
   }
