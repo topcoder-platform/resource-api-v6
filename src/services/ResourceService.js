@@ -16,6 +16,24 @@ const prisma = require('../common/prisma').getClient()
 
 const payloadFields = ['id', 'challengeId', 'memberId', 'memberHandle', 'roleId', 'created', 'createdBy', 'updated', 'updatedBy']
 
+let copilotResourceRoleIdsCache
+
+async function getCopilotResourceRoleIds () {
+  if (copilotResourceRoleIdsCache) {
+    return copilotResourceRoleIdsCache
+  }
+  const roles = await prisma.resourceRole.findMany({
+    where: {
+      nameLower: 'copilot'
+    },
+    select: {
+      id: true
+    }
+  })
+  copilotResourceRoleIdsCache = roles.map(role => role.id)
+  return copilotResourceRoleIdsCache
+}
+
 /**
  * Check whether the user can access resources
  * @param {Array} resources resources of current user for specified challenge id
@@ -74,9 +92,13 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   const prismaFilter = { where: { AND: [] } }
 
   let hasFullAccess
+  let userHasCopilotRole = false
 
   // Check if the user has a resource with full access on the challenge
-  if (currentUser && !currentUser.isMachine && !helper.hasAdminRole(currentUser)) {
+  const isMachineUser = !!(currentUser && currentUser.isMachine)
+  const isAdminUser = !!(currentUser && helper.hasAdminRole(currentUser))
+
+  if (currentUser && !isMachineUser && !isAdminUser) {
     if (challengeId) {
       const resources = await prisma.resource.findMany({
         where: {
@@ -91,6 +113,10 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
         hasFullAccess = true
       } catch (e) {
         hasFullAccess = false
+      }
+      if (!userHasCopilotRole) {
+        const copilotRoleIds = await getCopilotResourceRoleIds()
+        userHasCopilotRole = resources.some(resource => copilotRoleIds.includes(resource.roleId))
       }
     }
     if (memberId && _.toString(memberId) !== _.toString(currentUser.userId)) {
@@ -110,7 +136,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   if (!currentUser) {
     // if the user is not logged in, only return resources with submitter role ID
     prismaFilter.where.AND.push({ roleId: config.SUBMITTER_RESOURCE_ROLE_ID })
-  } else if (!currentUser.isMachine && !helper.hasAdminRole(currentUser) && !hasFullAccess) {
+  } else if (!isMachineUser && !isAdminUser && !hasFullAccess) {
     // if not admin, and not machine, only return submitters + all my roles
     prismaFilter.where.AND.push({
       OR: [
@@ -151,6 +177,8 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
 
   let memberObjects = await helper.getMemberInfoByIdList(memberIds)
   logger.info(`Retrieved member objects: ${JSON.stringify(memberObjects)}`)
+
+  const shouldExposeMemberEmail = Boolean(challengeId) && (isMachineUser || isAdminUser || userHasCopilotRole)
   const completeResources = []
   for (const resource of resources) {
     const memberInfo = _.find(memberObjects, (o) => _.toNumber('' + o.userId) === _.toNumber(resource.memberId))
@@ -159,6 +187,9 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
         ...resource,
         rating: memberInfo.maxRating ? memberInfo.maxRating.rating : undefined,
         memberHandle: memberInfo.handle
+      }
+      if (shouldExposeMemberEmail && memberInfo.email) {
+        completeResource.memberEmail = memberInfo.email
       }
       completeResources.push(completeResource)
     } else {

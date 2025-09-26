@@ -63,6 +63,8 @@ module.exports = describe('Get resources', () => {
     should.equal(result.total, 5)
     for (const record of result.data) {
       await assertResource(record.id, record)
+      should.exist(record.memberEmail)
+      record.memberEmail.should.be.String()
     }
     // user phead should have two resources
     should.equal(hasCopilotRole, true)
@@ -76,6 +78,8 @@ module.exports = describe('Get resources', () => {
     should.equal(result.total, 5)
     for (const record of result.data) {
       await assertResource(record.id, record)
+      should.exist(record.memberEmail)
+      record.memberEmail.should.be.String()
     }
     // user phead should have two resources
     should.equal(hasCopilotRole, true)
@@ -86,6 +90,7 @@ module.exports = describe('Get resources', () => {
     const result = await service.getResources(user.diazz, challengeId)
     should.equal(result.total, 1)
     should.equal(result.data[0].memberHandle, 'diazz')
+    should.not.exist(result.data[0].memberEmail)
   })
 
   it('get resources using m2m token', async () => {
@@ -95,6 +100,8 @@ module.exports = describe('Get resources', () => {
     should.equal(result.total, 5)
     for (const record of result.data) {
       await assertResource(record.id, record)
+      should.exist(record.memberEmail)
+      record.memberEmail.should.be.String()
     }
     // user phead should have two resources
     should.equal(hasCopilotRole, true)
@@ -108,6 +115,8 @@ module.exports = describe('Get resources', () => {
     should.equal(result.total, 1)
     for (const record of result.data) {
       await assertResource(record.id, record)
+      should.exist(record.memberEmail)
+      record.memberEmail.should.be.String()
     }
     // user phead should have copilot role
     should.equal(hasCopilotRole, true)
