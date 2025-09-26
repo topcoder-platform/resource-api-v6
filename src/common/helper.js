@@ -84,6 +84,9 @@ function autoWrapExpress (obj) {
  * @param {Object} authUser the user
  */
 function hasAdminRole (authUser) {
+  if (!authUser || !Array.isArray(authUser.roles)) {
+    return false
+  }
   for (let i = 0; i < authUser.roles.length; i++) {
     if (authUser.roles[i].toLowerCase() === constants.UserRoles.Admin.toLowerCase()) {
       return true
