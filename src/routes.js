@@ -42,6 +42,15 @@ module.exports = {
       scopes: [READ, ALL]
     }
   },
+  '/resources/:resourceId/phase-change-notifications': {
+    put: {
+      controller: 'ResourceController',
+      method: 'updatePhaseChangeNotifications',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin, constants.UserRoles.Copilot, constants.UserRoles.Manager, constants.UserRoles.User],
+      scopes: [UPDATE, ALL]
+    }
+  },
   '/resources/internal/jobs/clean': {
     post: {
       controller: 'CleanUpController',

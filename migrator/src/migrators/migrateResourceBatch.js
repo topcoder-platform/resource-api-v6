@@ -33,6 +33,9 @@ async function migrateResource(filePath) {
     const results = await Promise.allSettled(
       batch.map(data => {
         const createdBy = data.createdBy || process.env.CREATED_BY;
+        const phaseChangeNotifications = Object.prototype.hasOwnProperty.call(data, 'phaseChangeNotifications')
+          ? data.phaseChangeNotifications
+          : null;
 
         return prisma.resource.upsert({
           where: { id: data.id },
@@ -44,7 +47,8 @@ async function migrateResource(filePath) {
             createdAt: data.created ? new Date(data.created) : new Date(),
             createdBy,
             updatedAt: data.updatedAt ? new Date(data.updatedAt) : null,
-            updatedBy: data.updatedBy || null
+            updatedBy: data.updatedBy || null,
+            phaseChangeNotifications
           },
           create: {
             id: data.id,
@@ -55,7 +59,8 @@ async function migrateResource(filePath) {
             createdAt: data.created ? new Date(data.created) : new Date(),
             createdBy,
             updatedAt: data.updatedAt ? new Date(data.updatedAt) : null,
-            updatedBy: data.updatedBy || null
+            updatedBy: data.updatedBy || null,
+            phaseChangeNotifications
           }
         }).catch(err => {
           failCount++;

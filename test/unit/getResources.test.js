@@ -5,6 +5,7 @@
 const should = require('should')
 const service = require('../../src/services/ResourceService')
 const helper = require('../../src/common/helper')
+const prisma = require('../../src/common/prisma').getClient()
 const { user } = require('../common/testData')
 const { assertValidationError, assertError, getRoleIds } = require('../common/testHelper')
 
@@ -144,5 +145,25 @@ module.exports = describe('Get resources', () => {
       should.equal(err.name, 'NotFoundError')
       assertError(err, `Challenge ID ${challengeNotFoundId} not found`)
     }
+  })
+
+  it('returns false when phaseChangeNotifications is null', async () => {
+    const target = await prisma.resource.findFirst({ where: { challengeId } })
+    should.exist(target)
+    const originalValue = target.phaseChangeNotifications
+    await prisma.resource.update({
+      where: { id: target.id },
+      data: { phaseChangeNotifications: null }
+    })
+
+    const result = await service.getResources(user.admin, challengeId)
+    const resourceRecord = result.data.find(r => r.id === target.id)
+    should.exist(resourceRecord)
+    should.equal(resourceRecord.phaseChangeNotifications, false)
+
+    await prisma.resource.update({
+      where: { id: target.id },
+      data: { phaseChangeNotifications: originalValue }
+    })
   })
 })

@@ -118,5 +118,6 @@ describe('Topcoder - Challenge Resource API Unit Test', () => {
     require('./getResources.test')
     require('./listChallengesByMember.test')
     require('./deleteResource.test')
+    require('./updatePhaseChangeNotifications.test')
   })
 })

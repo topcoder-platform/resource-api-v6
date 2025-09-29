@@ -27,6 +27,9 @@ async function migrateResource(filePath) {
       const jsonLine = JSON.parse(line);
       const data = jsonLine._source;
       const createdBy = data.createdBy || process.env.CREATED_BY;
+      const phaseChangeNotifications = Object.prototype.hasOwnProperty.call(data, 'phaseChangeNotifications')
+        ? data.phaseChangeNotifications
+        : null;
 
       await prisma.resource.upsert({
         where: { id: data.id },
@@ -38,7 +41,8 @@ async function migrateResource(filePath) {
           createdAt: data.created ? new Date(data.created) : new Date(),
           createdBy,
           updatedAt: data.updatedAt ? new Date(data.updatedAt) : null,
-          updatedBy: data.updatedBy || null
+          updatedBy: data.updatedBy || null,
+          phaseChangeNotifications
         },
         create: {
           id: data.id,
@@ -49,7 +53,8 @@ async function migrateResource(filePath) {
           createdAt: data.created ? new Date(data.created) : new Date(),
           createdBy,
           updatedAt: data.updatedAt ? new Date(data.updatedAt) : null,
-          updatedBy: data.updatedBy || null
+          updatedBy: data.updatedBy || null,
+          phaseChangeNotifications
         }
       });
 

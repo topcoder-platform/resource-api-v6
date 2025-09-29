@@ -141,6 +141,9 @@ async function assertResource (id, expected) {
   should.equal(entity.memberId, expected.memberId)
   should.equal(entity.memberHandle.toLowerCase(), expected.memberHandle.toLowerCase())
   should.equal(entity.roleId, expected.roleId)
+  if (typeof expected.phaseChangeNotifications !== 'undefined') {
+    should.equal(Boolean(entity.phaseChangeNotifications), expected.phaseChangeNotifications)
+  }
   should.exist(expected.created)
   should.equal(entity.createdBy, expected.createdBy)
 }

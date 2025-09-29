@@ -37,6 +37,16 @@ async function deleteResource (req, res) {
 }
 
 /**
+ * Update the phase change notifications preference for a resource.
+ * @param {Object} req the request
+ * @param {Object} res the response
+ */
+async function updatePhaseChangeNotifications (req, res) {
+  const result = await service.updatePhaseChangeNotifications(req.authUser, req.params.resourceId, req.body)
+  res.send(result)
+}
+
+/**
  * List all challenge ids that given member has access to.
  * @param {Object} req the request
  * @param {Object} res the response
@@ -61,6 +71,7 @@ module.exports = {
   getResources,
   createResource,
   deleteResource,
+  updatePhaseChangeNotifications,
   listChallengesByMember,
   getResourceCount
 }

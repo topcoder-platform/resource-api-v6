@@ -228,6 +228,51 @@ paths:
           $ref: '#/definitions/NotFound'
         '500':
           $ref: '#/definitions/ServerError'
+  '/resources/{resourceId}/phase-change-notifications':
+    put:
+      description: |
+        Update the phase change notification setting for a specific resource. The preference can only be changed by the resource owner, an administrator, or an authorized machine token.
+
+        ### Authentication
+        - JWT roles: `administrator`, `copilot`, `Connect Manager`, `Topcoder User`
+        - M2M scopes: `update:resources`, `all:resources`
+      tags:
+        - Resources
+      security:
+        - Bearer: []
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The resource identifier.
+        - in: body
+          name: payload
+          required: true
+          schema:
+            type: object
+            required:
+              - phaseChangeNotifications
+            properties:
+              phaseChangeNotifications:
+                type: boolean
+                description: Set to `true` to receive notifications when a challenge phase changes; `false` to opt out.
+      responses:
+        '200':
+          description: OK - the preference was updated successfully.
+          schema:
+            $ref: '#/definitions/Resource'
+        '400':
+          $ref: '#/definitions/BadRequest'
+        '401':
+          $ref: '#/definitions/Unauthorized'
+        '403':
+          $ref: '#/definitions/Forbidden'
+        '404':
+          $ref: '#/definitions/NotFound'
+        '500':
+          $ref: '#/definitions/ServerError'
   /resources/internal/jobs/clean:
     post:
       description: |
@@ -592,6 +637,7 @@ definitions:
       - memberId
       - memberHandle
       - roleId
+      - phaseChangeNotifications
       - created
     properties:
       id:
@@ -609,6 +655,9 @@ definitions:
         type: string
         format: UUID
         description: The resource role ID
+      phaseChangeNotifications:
+        type: boolean
+        description: Indicates whether the member receives notifications when challenge phases change.
       created:
         type: string
         format: date-time

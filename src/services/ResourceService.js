@@ -14,7 +14,7 @@ const errors = require('../common/errors')
 const constants = require('../../app-constants')
 const prisma = require('../common/prisma').getClient()
 
-const payloadFields = ['id', 'challengeId', 'memberId', 'memberHandle', 'roleId', 'created', 'createdBy', 'updated', 'updatedBy']
+const payloadFields = ['id', 'challengeId', 'memberId', 'memberHandle', 'roleId', 'phaseChangeNotifications', 'created', 'createdBy', 'updated', 'updatedBy']
 
 let copilotResourceRoleIdsCache
 
@@ -170,6 +170,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   resources = _.map(resources, item => {
     const ret = _.omit(item, 'updatedBy', 'updatedAt', 'createdAt')
     ret.created = item.createdAt
+    ret.phaseChangeNotifications = Boolean(item.phaseChangeNotifications)
     return ret
   })
 
@@ -423,6 +424,7 @@ async function createResource (currentUser, resource) {
     let ret = _.pick(createdResource, payloadFields)
     ret.created = createdResource.createdAt
     ret.updated = createdResource.updatedAt
+    ret.phaseChangeNotifications = Boolean(createdResource.phaseChangeNotifications)
 
     logger.debug(`Created resource: ${JSON.stringify(ret)}`)
     await helper.postEvent(config.RESOURCE_CREATE_TOPIC, ret)
@@ -525,6 +527,7 @@ async function deleteResource (currentUser, resource) {
       created: ret.createdAt,
       updated: ret.updatedAt
     }
+    ret.phaseChangeNotifications = Boolean(ret.phaseChangeNotifications)
     await prisma.resource.deleteMany({ where: { id: ret.id } })
 
     logger.debug(`Deleted resource, posting to Bus API: ${JSON.stringify(ret)}`)
@@ -566,6 +569,59 @@ deleteResource.schema = {
       roleId: Joi.id()
     })
   )
+}
+
+/**
+ * Update the phase change notifications preference for a resource.
+ * @param {Object} currentUser the current user
+ * @param {String} resourceId the resource id
+ * @param {Object} payload the incoming payload
+ * @returns {Object} the updated resource
+ */
+async function updatePhaseChangeNotifications (currentUser, resourceId, payload) {
+  logger.debug(`updatePhaseChangeNotifications ${JSON.stringify([resourceId, payload])}`)
+
+  const resource = await prisma.resource.findUnique({ where: { id: resourceId } })
+
+  if (!resource) {
+    throw new errors.NotFoundError(`Resource with id ${resourceId} not found`)
+  }
+
+  const isMachineUser = Boolean(currentUser && currentUser.isMachine)
+  const isAdminUser = Boolean(currentUser && helper.hasAdminRole(currentUser))
+
+  if (!isMachineUser && !isAdminUser) {
+    if (!currentUser || _.toString(resource.memberId) !== _.toString(currentUser.userId)) {
+      throw new errors.ForbiddenError('You may only update your own phase change notification preference.')
+    }
+  }
+
+  const updatedBy = isMachineUser
+    ? (currentUser.sub || currentUser.clientId || 'system')
+    : _.toString(currentUser.userId)
+
+  const updatedResource = await prisma.resource.update({
+    where: { id: resourceId },
+    data: {
+      phaseChangeNotifications: payload.phaseChangeNotifications,
+      updatedBy
+    }
+  })
+
+  const ret = _.pick(updatedResource, payloadFields)
+  ret.created = updatedResource.createdAt
+  ret.updated = updatedResource.updatedAt
+  ret.phaseChangeNotifications = Boolean(updatedResource.phaseChangeNotifications)
+
+  return ret
+}
+
+updatePhaseChangeNotifications.schema = {
+  currentUser: Joi.any(),
+  resourceId: Joi.id().required(),
+  payload: Joi.object().keys({
+    phaseChangeNotifications: Joi.boolean().required()
+  }).required()
 }
 
 /**
@@ -658,6 +714,7 @@ module.exports = {
   getResources,
   createResource,
   deleteResource,
+  updatePhaseChangeNotifications,
   listChallengesByMember,
   getResourceCount
 }
