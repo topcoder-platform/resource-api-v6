@@ -38,6 +38,10 @@ module.exports = describe('Get resources', () => {
     should.equal(entity.memberId, expected.memberId)
 
     should.equal(entity.memberHandle.toLowerCase(), expected.memberHandle.toLowerCase())
+    const resourceRole = await helper.getById('ResourceRole', entity.roleId)
+    should.exist(expected.roleName)
+    expected.roleName.should.be.String()
+    should.equal(expected.roleName, resourceRole.name)
     if (entity.memberHandle.toLowerCase() === 'phead') {
       if (entity.roleId === copilotRoleId) {
         hasCopilotRole = true
@@ -66,6 +70,7 @@ module.exports = describe('Get resources', () => {
       await assertResource(record.id, record)
       should.exist(record.memberEmail)
       record.memberEmail.should.be.String()
+      should.exist(record.roleName)
     }
     // user phead should have two resources
     should.equal(hasCopilotRole, true)
@@ -81,6 +86,7 @@ module.exports = describe('Get resources', () => {
       await assertResource(record.id, record)
       should.exist(record.memberEmail)
       record.memberEmail.should.be.String()
+      should.exist(record.roleName)
     }
     // user phead should have two resources
     should.equal(hasCopilotRole, true)
@@ -92,6 +98,7 @@ module.exports = describe('Get resources', () => {
     should.equal(result.total, 1)
     should.equal(result.data[0].memberHandle, 'diazz')
     should.not.exist(result.data[0].memberEmail)
+    should.exist(result.data[0].roleName)
   })
 
   it('get resources using m2m token', async () => {
@@ -103,6 +110,7 @@ module.exports = describe('Get resources', () => {
       await assertResource(record.id, record)
       should.exist(record.memberEmail)
       record.memberEmail.should.be.String()
+      should.exist(record.roleName)
     }
     // user phead should have two resources
     should.equal(hasCopilotRole, true)
@@ -118,6 +126,7 @@ module.exports = describe('Get resources', () => {
       await assertResource(record.id, record)
       should.exist(record.memberEmail)
       record.memberEmail.should.be.String()
+      should.exist(record.roleName)
     }
     // user phead should have copilot role
     should.equal(hasCopilotRole, true)

@@ -164,13 +164,21 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
     ...prismaFilter,
     orderBy,
     skip: (page - 1) * perPage,
-    take: perPage
+    take: perPage,
+    include: {
+      resourceRole: {
+        select: {
+          name: true
+        }
+      }
+    }
   }
   let resources = await prisma.resource.findMany(prismaQuery)
   resources = _.map(resources, item => {
-    const ret = _.omit(item, 'updatedBy', 'updatedAt', 'createdAt')
+    const ret = _.omit(item, 'updatedBy', 'updatedAt', 'createdAt', 'resourceRole')
     ret.created = item.createdAt
     ret.phaseChangeNotifications = Boolean(item.phaseChangeNotifications)
+    ret.roleName = _.get(item, 'resourceRole.name', null)
     return ret
   })
 
