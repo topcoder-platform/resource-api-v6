@@ -307,7 +307,7 @@ async function init (currentUser, challengeId, resource, isCreated) {
         `User ${handle} is not allowed to register.`
       )
     }
-    if (!_.get(challenge, 'task.isTask', false) && (_.toLower(challenge.createdBy) === _.toLower(handle) ||
+    if (!_.get(challenge, 'task.isTask', false) && (_.toLower(challenge.createdBy) === _.toLower(memberId) ||
       _.some(userResources, r => r.roleId === config.REVIEWER_RESOURCE_ROLE_ID || r.roleId === config.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID))) {
       throw new errors.BadRequestError(
         `User ${handle} is not allowed to register.`
