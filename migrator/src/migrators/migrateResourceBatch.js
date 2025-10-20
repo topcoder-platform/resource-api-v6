@@ -13,7 +13,12 @@ const prisma = require('../clients/prismaClient');
 const { countFileLines } = require('../utils/countFileLines');
 const { createSimpleProgressBar } = require('../utils/progressLogger');
 
-async function migrateResource(filePath) {
+const parseTimestamp = (value) => {
+  const t = value ? new Date(value) : null;
+  return t && !isNaN(t.getTime()) ? t : null;
+};
+
+async function migrateResource(filePath, startDate) {
   // Estimar el total de líneas del archivo NDJSON
   const totalRecords = await countFileLines(filePath);
   const progress = createSimpleProgressBar(Math.ceil(totalRecords / 100));
@@ -28,6 +33,14 @@ async function migrateResource(filePath) {
   let batch = [];
   let successCount = 0;
   let failCount = 0;
+  let skippedCount = 0;
+  const startDateObj = startDate ? new Date(startDate) : null;
+  const isInvalidStartDate = startDate && isNaN(startDateObj.getTime());
+  const filterStartDate = !isInvalidStartDate ? startDateObj : null;
+
+  if (isInvalidStartDate) {
+    console.warn('migrateResource: invalid startDate provided; disabling date filter.', startDate);
+  }
 
   async function processBatch(batch) {
     const results = await Promise.allSettled(
@@ -83,6 +96,20 @@ async function migrateResource(filePath) {
     try {
       const jsonLine = JSON.parse(line);
       const data = jsonLine._source;
+      if (filterStartDate) {
+        const createdDate = parseTimestamp(data.created);
+        const updatedAtDate = parseTimestamp(data.updatedAt);
+
+        const shouldSkip =
+          (!createdDate && !updatedAtDate) ||
+          (((createdDate && createdDate < filterStartDate) || !createdDate) &&
+            ((updatedAtDate && updatedAtDate < filterStartDate) || !updatedAtDate));
+
+        if (shouldSkip) {
+          skippedCount++;
+          continue;
+        }
+      }
       batch.push(data);
 
       if (batch.length >= batchSize) {
@@ -102,6 +129,9 @@ async function migrateResource(filePath) {
 
   progress.done();
   console.log(`✅ Resource migration finished: ${successCount} success, ${failCount} failed`);
+  if (skippedCount > 0) {
+    console.log(`ℹ️ Resource migration skipped ${skippedCount} record(s) before the start date`);
+  }
 }
 
 module.exports = { migrateResource };

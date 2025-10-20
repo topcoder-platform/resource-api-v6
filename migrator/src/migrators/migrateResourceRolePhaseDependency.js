@@ -10,14 +10,37 @@ const fs = require('fs');
 const { loadJSON } = require('../clients/dynamoLoader');
 const prisma = require('../clients/prismaClient');
 
-async function migrateResourceRolePhaseDependency(filePath) {
+async function migrateResourceRolePhaseDependency(filePath, startDate) {
   const records = await loadJSON(filePath);
 
   let successCount = 0;
   let failCount = 0;
+  let skippedCount = 0;
+  const startDateObj = startDate ? new Date(startDate) : null;
 
   for (const record of records) {
     try {
+      const createdRaw = record.createdAt;
+      const updatedRaw = record.updatedAt;
+
+      let createdDate = createdRaw ? new Date(createdRaw) : null;
+      if (createdDate && isNaN(createdDate.getTime())) {
+        createdDate = null;
+      }
+
+      let updatedDate = updatedRaw ? new Date(updatedRaw) : null;
+      if (updatedDate && isNaN(updatedDate.getTime())) {
+        updatedDate = null;
+      }
+
+      const createdBeforeOrMissing = !createdDate || (startDateObj ? createdDate < startDateObj : false);
+      const updatedBeforeOrMissing = !updatedDate || (startDateObj ? updatedDate < startDateObj : false);
+
+      if (startDateObj && createdBeforeOrMissing && updatedBeforeOrMissing) {
+        skippedCount++;
+        continue;
+      }
+
       const createdBy = record.createdBy || process.env.CREATED_BY;
       const phaseState = record.phaseState ?? (process.env.DEFAULT_PHASE_STATE === 'true');
       
@@ -52,8 +75,7 @@ async function migrateResourceRolePhaseDependency(filePath) {
     }
   }
 
-  console.log(`✅ ResourceRolePhaseDependency migration finished: ${successCount} success, ${failCount} failed`);
+  console.log(`✅ ResourceRolePhaseDependency migration finished: ${successCount} success, ${failCount} failed, ${skippedCount} skipped`);
 }
 
 module.exports = { migrateResourceRolePhaseDependency };
-

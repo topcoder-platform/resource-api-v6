@@ -70,15 +70,59 @@
   CREATED_BY=my-migrator node src/index.js member-profiles
   ```
 
+  ## 🕒 Incremental Migration with Start Date
+
+  The `--start-date` parameter unlocks incremental migrations by filtering records on their creation and update timestamps. Run a full import in advance, then rerun with a start date to pick up only the recent changes—keeping the final cut-over fast and predictable.
+
+  ### 🛠️ Usage Examples
+
+  ```bash
+  node src/index.js resources ./data/challenge-api.resources.json --start-date=2024-01-15
+  node src/index.js resource-roles --start-date=2024-03-01
+  node src/migrateAll.js --start-date=2024-02-20
+  ```
+
+  ### 🔍 Filtering Behavior
+
+  - Records are imported when `created`/`createdAt` **or** `updatedAt` is on or after the provided start date
+  - Records missing **both** date fields are skipped when a start date is supplied
+  - Records with both date fields present but older than the start date are skipped
+  - Dates must use the ISO `YYYY-MM-DD` format
+  - Without `--start-date`, all records are imported (default behavior)
+
+  ### 🔄 Incremental Migration Workflow
+
+  1. **Bulk load ahead of time (Jan 1)** — seed the database without a start date:
+
+     ```bash
+     node src/migrateAll.js
+     ```
+
+  2. **Wait until the cut-over window (Mar 15)** — allow upstream systems to keep producing data as usual.
+
+  3. **Refresh with recent updates** — bring the target in sync by importing only records touched since Jan 1:
+
+     ```bash
+     node src/migrateAll.js --start-date=2024-01-01
+     ```
+
+     This staggered approach turns a multi-hour bulk migration into a quick incremental catch-up that typically completes in minutes.
+
+  ### 📌 Model Support
+
+  - `resources`: filters on `created` and `updatedAt`
+  - `resource-roles`: filters on `createdAt` and `updatedAt`
+  - `resource-role-phase-dependencies`: filters on `createdAt` and `updatedAt`
+
   ## 🧩 Available Migration Steps
 
-  | Step                                | Auto Strategy | Description                                                                                       |
-  |-------------------------------------|---------------|---------------------------------------------------------------------------------------------------|
-  | `member-profiles`                  | ✅            | Auto strategy: uses `stream-json` (batch) for files larger than 3MB, and `loadJSON` (simple) otherwise |
-  | `member-stats`                     | ✅            | Auto strategy: uses `stream-json` (batch) for files larger than 3MB, and `loadJSON` (simple) otherwise |
-  | `resource-roles`                   | ❌            | Simple in-memory migration using `loadJSON`, not expected to be large                             |
-  | `resource-role-phase-dependencies` | ❌            | Simple in-memory migration using `loadJSON`, not expected to be large                             |
-  | `resources`                        | ✅            | Auto strategy for NDJSON files: uses `readline` + batch for files > 3 MB, otherwise simple line-by-line       |
+  | Step                                | Auto Strategy | Start Date Support | Description                                                                                       |
+  |-------------------------------------|---------------|--------------------|---------------------------------------------------------------------------------------------------|
+  | `member-profiles`                  | ✅            | ❌                 | Auto strategy: uses `stream-json` (batch) for files larger than 3MB, and `loadJSON` (simple) otherwise |
+  | `member-stats`                     | ✅            | ❌                 | Auto strategy: uses `stream-json` (batch) for files larger than 3MB, and `loadJSON` (simple) otherwise |
+  | `resource-roles`                   | ❌            | ✅                 | Simple in-memory migration using `loadJSON`, not expected to be large                             |
+  | `resource-role-phase-dependencies` | ❌            | ✅                 | Simple in-memory migration using `loadJSON`, not expected to be large                             |
+  | `resources`                        | ✅            | ✅                 | Auto strategy for NDJSON files: uses `readline` + batch for files > 3 MB, otherwise simple line-by-line       |
 
   > ⚙️ **Why Auto Strategy?**
 >
@@ -110,9 +154,10 @@ You can now run all migration steps sequentially using the following script:
 
 ```bash
 node src/migrateAll.js
+node src/migrateAll.js --start-date=2024-01-15
 ```
 
-This script will automatically execute each step in order (`resource-roles`, `resource-role-phase-dependencies`, `resources`), logging progress and duration for each. Ideal for full dataset migration in one command.
+This script will automatically execute each step in order (`resource-roles`, `resource-role-phase-dependencies`, `resources`), logging progress and duration for each. When provided, the start date is passed to every step, so only records touched on or after the target date are processed—ideal for full imports followed by a quick incremental catch-up in one command.
 
   ## 📒 Error Logs
   All failed migrations are logged under the `logs/` folder by model:
@@ -223,6 +268,4 @@ node src/validation/validateMemberProfiles.js > logs/memberprofile_validation.lo
 ```
 
 ---
-
-
 

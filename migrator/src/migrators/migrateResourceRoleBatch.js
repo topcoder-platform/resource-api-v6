@@ -9,14 +9,48 @@
 const prisma = require('../clients/prismaClient');
 const { batchMigrator } = require('../utils/batchMigrator');
 
-async function migrateResourceRole(filePath) {
+const DEFAULT_CREATED_BY = process.env.CREATED_BY || process.env.DEFAULT_CREATED_BY || '151743';
+const DEFAULT_UPDATED_BY = process.env.UPDATED_BY || DEFAULT_CREATED_BY;
+
+const parseTimestamp = (value) => {
+  const t = value ? new Date(value) : null;
+  return t && !isNaN(t.getTime()) ? t : null;
+};
+
+async function migrateResourceRole(filePath, startDate) {
+  const startDateObj = startDate ? new Date(startDate) : null;
+  const isInvalidStartDate = startDate && isNaN(startDateObj.getTime());
+  const filterStartDate = !isInvalidStartDate ? startDateObj : null;
+
+  if (isInvalidStartDate) {
+    console.warn('migrateResourceRole: invalid startDate provided; disabling date filter.', startDate);
+  }
+
+  const filterRecord = filterStartDate
+    ? (role) => {
+        const createdAtDate = parseTimestamp(role.createdAt);
+        const updatedAtDate = parseTimestamp(role.updatedAt);
+
+        const shouldSkip =
+          (!createdAtDate && !updatedAtDate) ||
+          (((createdAtDate && createdAtDate < filterStartDate) || !createdAtDate) &&
+            ((updatedAtDate && updatedAtDate < filterStartDate) || !updatedAtDate));
+
+        return !shouldSkip;
+      }
+    : undefined;
+
   await batchMigrator({
     filePath,
     batchSize: 100,
     label: 'ResourceRole',
     errorLogFile: 'logs/resourcerole_errors.log',
+    filterRecord,
     handleRecord: async (role) => {
-      const createdBy = role.createdBy || process.env.CREATED_BY;
+      const createdAt = parseTimestamp(role.createdAt) ?? new Date();
+      const updatedAt = parseTimestamp(role.updatedAt) ?? new Date();
+      const createdBy = (role.createdBy && `${role.createdBy}`) || DEFAULT_CREATED_BY;
+      const updatedBy = (role.updatedBy && `${role.updatedBy}`) || DEFAULT_UPDATED_BY;
       const fullReadAccess = role.fullReadAccess ?? (role.fullAccess ?? (process.env.DEFAULT_READ_ACCESS === 'true'));
       const fullWriteAccess = role.fullWriteAccess ?? (role.fullAccess ?? (process.env.DEFAULT_READ_ACCESS === 'true'));
       const isActive = role.isActive ?? (process.env.DEFAULT_IS_ACTIVE === 'true');
@@ -32,10 +66,10 @@ async function migrateResourceRole(filePath) {
           isActive,
           selfObtainable,
           legacyId: role.legacyId ?? null,
-          createdAt: role.createdAt ? new Date(role.createdAt) : new Date(),
+          createdAt,
           createdBy,
-          updatedAt: role.updatedAt ? new Date(role.updatedAt) : null,
-          updatedBy: role.updatedBy || null
+          updatedAt,
+          updatedBy
         },
         create: {
           id: role.id,
@@ -46,10 +80,10 @@ async function migrateResourceRole(filePath) {
           isActive,
           selfObtainable,
           legacyId: role.legacyId ?? null,
-          createdAt: role.createdAt ? new Date(role.createdAt) : new Date(),
+          createdAt,
           createdBy,
-          updatedAt: role.updatedAt ? new Date(role.updatedAt) : null,
-          updatedBy: role.updatedBy || null
+          updatedAt,
+          updatedBy
         }
       });
     }
@@ -57,4 +91,3 @@ async function migrateResourceRole(filePath) {
 }
 
 module.exports = { migrateResourceRole };
-

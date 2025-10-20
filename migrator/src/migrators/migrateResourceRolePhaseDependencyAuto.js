@@ -12,19 +12,18 @@ const { migrateResourceRolePhaseDependency: migrateBatch } = require('./migrateR
 
 const FILE_SIZE_THRESHOLD = 3 * 1024 * 1024; // 3 MB
 
-async function migrateResourceRolePhaseDependencyAuto(filePath) {
+async function migrateResourceRolePhaseDependencyAuto(filePath, startDate) {
   const stats = fs.statSync(filePath);
   const fileSize = stats.size;
 
   if (fileSize < FILE_SIZE_THRESHOLD) {
     // Using normal migration (in-memory)
-    await migrateResourceRolePhaseDependency(filePath);
+    await migrateResourceRolePhaseDependency(filePath, startDate);
   } else {
     // Using batch migration (streaming)
-    await migrateBatch(filePath);
+    await migrateBatch(filePath, startDate);
   }
 }
 
 module.exports = { migrateResourceRolePhaseDependencyAuto };
-
 

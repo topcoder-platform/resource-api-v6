@@ -16,16 +16,16 @@ const { migrateResource: migrateBatch } = require('./migrateResourceBatch');
 
 const FILE_SIZE_THRESHOLD = 3 * 1024 * 1024; // 3 MB
 
-async function migrateResourceAuto(filePath) {
+async function migrateResourceAuto(filePath, startDate) {
   const stats = fs.statSync(filePath);
   const fileSize = stats.size;
 
   if (fileSize < FILE_SIZE_THRESHOLD) {
     // Using normal migration (in-memory)
-    await migrateResource(filePath);
+    await migrateResource(filePath, startDate);
   } else {
     // Using batch migration (streaming)
-    await migrateBatch(filePath);
+    await migrateBatch(filePath, startDate);
   }
 }
 

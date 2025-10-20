@@ -467,7 +467,7 @@ async function createResource (currentUser, resource) {
             forum: forumUrl,
             submissionEndTime: new Date(_.get(_.find(challenge.phases, phase => phase.name === 'Submission'), 'scheduledEndDate')).toUTCString(),
             submitUrl: _.replace(config.REGISTRATION_EMAIL.SUBMIT_URL, ':id', challengeId),
-            reviewAppUrl: config.REGISTRATION_EMAIL.REVIEW_APP_URL + challenge.legacyId,
+            reviewAppUrl: config.REGISTRATION_EMAIL.REVIEW_APP_URL + challenge.id + '/challenge-details',
             helpUrl: config.REGISTRATION_EMAIL.HELP_URL,
             support: config.REGISTRATION_EMAIL.SUPPORT_EMAIL
           },

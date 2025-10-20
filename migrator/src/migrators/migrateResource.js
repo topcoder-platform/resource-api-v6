@@ -10,7 +10,7 @@ const fs = require('fs');
 const readline = require('readline');
 const prisma = require('../clients/prismaClient');
 
-async function migrateResource(filePath) {
+async function migrateResource(filePath, startDate) {
   const fileStream = fs.createReadStream(filePath);
   const rl = readline.createInterface({
     input: fileStream,
@@ -19,6 +19,8 @@ async function migrateResource(filePath) {
 
   let successCount = 0;
   let failCount = 0;
+  let skippedCount = 0;
+  const startDateObj = startDate ? new Date(startDate) : null;
 
   for await (const line of rl) {
     if (!line.trim()) continue;
@@ -26,6 +28,28 @@ async function migrateResource(filePath) {
     try {
       const jsonLine = JSON.parse(line);
       const data = jsonLine._source;
+
+      const createdRaw = data.created;
+      const updatedRaw = data.updatedAt;
+
+      let createdDate = createdRaw ? new Date(createdRaw) : null;
+      if (createdDate && isNaN(createdDate.getTime())) {
+        createdDate = null;
+      }
+
+      let updatedDate = updatedRaw ? new Date(updatedRaw) : null;
+      if (updatedDate && isNaN(updatedDate.getTime())) {
+        updatedDate = null;
+      }
+
+      const createdBeforeOrMissing = !createdDate || (startDateObj ? createdDate < startDateObj : false);
+      const updatedBeforeOrMissing = !updatedDate || (startDateObj ? updatedDate < startDateObj : false);
+
+      if (startDateObj && createdBeforeOrMissing && updatedBeforeOrMissing) {
+        skippedCount++;
+        continue;
+      }
+
       const createdBy = data.createdBy || process.env.CREATED_BY;
       const phaseChangeNotifications = Object.prototype.hasOwnProperty.call(data, 'phaseChangeNotifications')
         ? data.phaseChangeNotifications
@@ -72,7 +96,7 @@ async function migrateResource(filePath) {
     }
   }
 
-  console.log(`✅ Resource migration finished: ${successCount} success, ${failCount} failed`);
+  console.log(`✅ Resource migration finished: ${successCount} success, ${failCount} failed, ${skippedCount} skipped`);
 }
 
 module.exports = { migrateResource };

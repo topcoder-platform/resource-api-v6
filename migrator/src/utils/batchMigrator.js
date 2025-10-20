@@ -18,9 +18,10 @@ const { countJsonRecordsByBrace } = require('./countJsonRecordsByBrace');
  * @param {string} errorLogFile - File path to log failed record operations.
  * @param {boolean} [isNdjson=false] - Set to true if the file is in NDJSON format (one JSON object per line).
  * @param {number} [totalRecords] - Optional. Total number of records for progress tracking. If not provided, it will be estimated automatically.
+ * @param {function} [filterRecord] - Optional callback that returns true to include a record or false to skip it.
  */
 
-async function batchMigrator({ filePath, batchSize = 100, label, handleRecord, errorLogFile, totalRecords }) {
+async function batchMigrator({ filePath, batchSize = 100, label, handleRecord, errorLogFile, totalRecords, filterRecord }) {
   const total = totalRecords ?? await countJsonRecordsByBrace(filePath);
   const progress = createSimpleProgressBar(Math.ceil(total / batchSize));
 
@@ -35,6 +36,10 @@ async function batchMigrator({ filePath, batchSize = 100, label, handleRecord, e
   let failCount = 0;
 
   for await (const { value: record } of pipeline) {
+    if (filterRecord && !filterRecord(record)) {
+      continue;
+    }
+
     batch.push(record);
 
     if (batch.length >= batchSize) {
