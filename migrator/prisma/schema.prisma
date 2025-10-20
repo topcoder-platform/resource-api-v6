@@ -34,6 +34,7 @@ model Resource {
   memberId     String
   memberHandle String
   roleId       String
+  phaseChangeNotifications Boolean @default(true)
   createdAt    DateTime @default(now())
   createdBy    String
   updatedAt    DateTime? @updatedAt

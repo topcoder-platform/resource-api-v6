@@ -51,9 +51,7 @@ async function migrateResource(filePath, startDate) {
       }
 
       const createdBy = data.createdBy || process.env.CREATED_BY;
-      const phaseChangeNotifications = Object.prototype.hasOwnProperty.call(data, 'phaseChangeNotifications')
-        ? data.phaseChangeNotifications
-        : null;
+      const phaseChangeNotifications = data.phaseChangeNotifications ?? true;
 
       await prisma.resource.upsert({
         where: { id: data.id },
