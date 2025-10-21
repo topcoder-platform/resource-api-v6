@@ -427,12 +427,20 @@ async function createResource (currentUser, resource) {
       memberHandle: handle
     }, resource)
     const createdResource = await prisma.resource.create({
-      data: prismaData
+      data: prismaData,
+      include: {
+        resourceRole: {
+          select: {
+            name: true
+          }
+        }
+      }
     })
     let ret = _.pick(createdResource, payloadFields)
     ret.created = createdResource.createdAt
     ret.updated = createdResource.updatedAt
     ret.phaseChangeNotifications = Boolean(createdResource.phaseChangeNotifications)
+    ret.roleName = _.get(createdResource, 'resourceRole.name', null)
 
     logger.debug(`Created resource: ${JSON.stringify(ret)}`)
     await helper.postEvent(config.RESOURCE_CREATE_TOPIC, ret)
