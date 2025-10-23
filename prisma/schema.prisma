@@ -24,8 +24,10 @@ model ResourceRole {
   resources                     Resource[]
   resourceRolePhaseDependencies ResourceRolePhaseDependency[]
 
-  // Index for faster search
+  // Indexes for faster search
   @@index([nameLower], map: "resourcerole-nameLower-index")
+  @@index([isActive], map: "resourcerole-isActive-index")
+  @@index([isActive, selfObtainable], map: "resourcerole-isActiveSelfObtainable-index")
 }
 
 model Resource {
@@ -46,6 +48,8 @@ model Resource {
   // Indexes for faster searches
   @@index([challengeId, memberId], map: "resource-challengeIdMemberId-index")
   @@index([memberId, roleId], map: "resource-memberIdRoleId-index")
+  @@index([roleId], map: "resource-roleId-index")
+  @@index([memberId, challengeId], map: "resource-memberIdChallengeId-index")
 }
 
 model ResourceRolePhaseDependency {
@@ -60,4 +64,5 @@ model ResourceRolePhaseDependency {
   resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])
 
   @@unique([phaseId, resourceRoleId], map: "resourcerolephase-phaseId-resourceRoleId-unique")
+  @@index([resourceRoleId], map: "resourcerolephasedependency-resourceRoleId-index")
 }
