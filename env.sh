@@ -32,4 +32,4 @@ export MEMBER_DB_URL="postgresql://johndoe:mypassword@localhost:5632/memberdb"
 
 export CHALLENGE_DB_URL="postgresql://johndoe:mypassword@localhost:5732/challengedb"
 
-export RESOURCE_SERVICE_PRISMA_TIMEOU=10000
+export RESOURCE_SERVICE_PRISMA_TIMEOUT=10000
