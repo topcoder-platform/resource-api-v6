@@ -329,6 +329,12 @@ async function init (currentUser, challengeId, resource, isCreated) {
   const { memberId, email } = memberInfoFromDb
   handle = memberInfoFromDb.handle
   const userResources = allResources.filter((r) => _.toLower(r.memberHandle) === _.toLower(handle))
+  
+  let restrictedRoleIds
+  if (isCreated) {
+    restrictedRoleIds = await getRestrictedRoleIds()
+  }
+  
   // Retrieve the constraint - Allowed Registrants
   if (isCreated && resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID) {
     const allowedRegistrants = _.get(challenge, 'constraints.allowedRegistrants')
@@ -352,7 +358,6 @@ async function init (currentUser, challengeId, resource, isCreated) {
       )
     }
     // Check if user already has a restricted role (Manager, Copilot, Reviewer, etc.)
-    const restrictedRoleIds = await getRestrictedRoleIds()
     const existingRestrictedRole = _.find(userResources, r => restrictedRoleIds.includes(r.roleId))
     if (existingRestrictedRole) {
       const roleNamesList = RESTRICTED_ROLE_NAMES.slice(0, -1).join(', ') + ', or ' + RESTRICTED_ROLE_NAMES.slice(-1)
@@ -393,7 +398,6 @@ async function init (currentUser, challengeId, resource, isCreated) {
 
   // Check if user is trying to assign a restricted role and already has submitter role
   if (isCreated) {
-    const restrictedRoleIds = await getRestrictedRoleIds()
     if (restrictedRoleIds.includes(resource.roleId)) {
       const existingSubmitterRole = _.find(userResources, r => r.roleId === config.SUBMITTER_RESOURCE_ROLE_ID)
       if (existingSubmitterRole) {
