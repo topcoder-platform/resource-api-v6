@@ -16,6 +16,18 @@ const prisma = require('../common/prisma').getClient()
 
 const payloadFields = ['id', 'challengeId', 'memberId', 'memberHandle', 'roleId', 'phaseChangeNotifications', 'created', 'createdBy', 'updated', 'updatedBy']
 
+// Restricted roles that cannot be combined with submitter role
+const RESTRICTED_ROLE_NAMES = [
+  'manager',
+  'copilot',
+  'reviewer',
+  'iterative reviewer',
+  'screener',
+  'checkpoint screener',
+  'checkpoint reviewer',
+  'approver'
+]
+
 let copilotResourceRoleIdsCache
 let restrictedRoleIdsCache
 
@@ -45,20 +57,10 @@ async function getRestrictedRoleIds () {
   if (restrictedRoleIdsCache) {
     return restrictedRoleIdsCache
   }
-  const restrictedRoleNames = [
-    'manager',
-    'copilot',
-    'reviewer',
-    'iterative reviewer',
-    'screener',
-    'checkpoint screener',
-    'checkpoint reviewer',
-    'approver'
-  ]
   const roles = await prisma.resourceRole.findMany({
     where: {
       nameLower: {
-        in: restrictedRoleNames
+        in: RESTRICTED_ROLE_NAMES
       }
     },
     select: {
@@ -353,8 +355,9 @@ async function init (currentUser, challengeId, resource, isCreated) {
     const restrictedRoleIds = await getRestrictedRoleIds()
     const existingRestrictedRole = _.find(userResources, r => restrictedRoleIds.includes(r.roleId))
     if (existingRestrictedRole) {
+      const roleNamesList = RESTRICTED_ROLE_NAMES.slice(0, -1).join(', ') + ', or ' + RESTRICTED_ROLE_NAMES.slice(-1)
       throw new errors.BadRequestError(
-        `User ${handle} is already assigned a restricted role (Manager, Copilot, Reviewer, Iterative Reviewer, Screener, Checkpoint Screener, Checkpoint Reviewer, or Approver) and cannot be registered as a submitter.`
+        `User ${handle} is already assigned a restricted role (${roleNamesList}) and cannot be registered as a submitter.`
       )
     }
   }
