@@ -17,6 +17,7 @@ const prisma = require('../common/prisma').getClient()
 const payloadFields = ['id', 'challengeId', 'memberId', 'memberHandle', 'roleId', 'phaseChangeNotifications', 'created', 'createdBy', 'updated', 'updatedBy']
 
 let copilotResourceRoleIdsCache
+let restrictedRoleIdsCache
 
 async function getCopilotResourceRoleIds () {
   if (copilotResourceRoleIdsCache) {
@@ -32,6 +33,41 @@ async function getCopilotResourceRoleIds () {
   })
   copilotResourceRoleIdsCache = roles.map(role => role.id)
   return copilotResourceRoleIdsCache
+}
+
+/**
+ * Get resource role IDs that are restricted from being combined with submitter role.
+ * These include: Manager, Copilot, Reviewer, Iterative Reviewer, Screener,
+ * Checkpoint Screener, Checkpoint Reviewer, and Approver.
+ * @returns {Promise<Array<String>>} Array of restricted role IDs
+ */
+async function getRestrictedRoleIds () {
+  if (restrictedRoleIdsCache) {
+    return restrictedRoleIdsCache
+  }
+  const restrictedRoleNames = [
+    'manager',
+    'copilot',
+    'reviewer',
+    'iterative reviewer',
+    'screener',
+    'checkpoint screener',
+    'checkpoint reviewer',
+    'approver'
+  ]
+  const roles = await prisma.resourceRole.findMany({
+    where: {
+      nameLower: {
+        in: restrictedRoleNames
+      }
+    },
+    select: {
+      id: true,
+      nameLower: true
+    }
+  })
+  restrictedRoleIdsCache = roles.map(role => role.id)
+  return restrictedRoleIdsCache
 }
 
 /**
@@ -307,10 +343,20 @@ async function init (currentUser, challengeId, resource, isCreated) {
         `User ${handle} is not allowed to register.`
       )
     }
-    if (!_.get(challenge, 'task.isTask', false) && (_.toLower(challenge.createdBy) === _.toLower(memberId) ||
-      _.some(userResources, r => r.roleId === config.REVIEWER_RESOURCE_ROLE_ID || r.roleId === config.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID))) {
+    // Prevent challenge creator from registering as submitter (for non-tasks)
+    if (!_.get(challenge, 'task.isTask', false) && _.toLower(challenge.createdBy) === _.toLower(memberId)) {
       throw new errors.BadRequestError(
         `User ${handle} is not allowed to register.`
+      )
+    }
+    // Check if user already has a restricted role (Manager, Copilot, Reviewer, etc.)
+    const restrictedRoleIds = await getRestrictedRoleIds()
+    const existingRestrictedRole = _.find(userResources, r => restrictedRoleIds.includes(r.roleId))
+    if (existingRestrictedRole) {
+      // Get the role name for better error message
+      const existingRole = await getResourceRole(existingRestrictedRole.roleId, false)
+      throw new errors.BadRequestError(
+        `User ${handle} is already assigned a ${existingRole.name} role and cannot be registered as a submitter.`
       )
     }
   }
@@ -343,6 +389,19 @@ async function init (currentUser, challengeId, resource, isCreated) {
 
   // ensure resource role existed
   const resourceRole = await getResourceRole(resource.roleId, isCreated)
+
+  // Check if user is trying to assign a restricted role and already has submitter role
+  if (isCreated) {
+    const restrictedRoleIds = await getRestrictedRoleIds()
+    if (restrictedRoleIds.includes(resource.roleId)) {
+      const existingSubmitterRole = _.find(userResources, r => r.roleId === config.SUBMITTER_RESOURCE_ROLE_ID)
+      if (existingSubmitterRole) {
+        throw new errors.BadRequestError(
+          `User ${handle} is already registered as a submitter and cannot be assigned a ${resourceRole.name} role.`
+        )
+      }
+    }
+  }
 
   // Verify the member has agreed to the challenge terms
   if (isCreated) {
