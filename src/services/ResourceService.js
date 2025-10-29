@@ -353,10 +353,8 @@ async function init (currentUser, challengeId, resource, isCreated) {
     const restrictedRoleIds = await getRestrictedRoleIds()
     const existingRestrictedRole = _.find(userResources, r => restrictedRoleIds.includes(r.roleId))
     if (existingRestrictedRole) {
-      // Get the role name for better error message
-      const existingRole = await getResourceRole(existingRestrictedRole.roleId, false)
       throw new errors.BadRequestError(
-        `User ${handle} is already assigned a ${existingRole.name} role and cannot be registered as a submitter.`
+        `User ${handle} is already assigned a restricted role (Manager, Copilot, Reviewer, Iterative Reviewer, Screener, Checkpoint Screener, Checkpoint Reviewer, or Approver) and cannot be registered as a submitter.`
       )
     }
   }
