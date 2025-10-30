@@ -16,7 +16,20 @@ const prisma = require('../common/prisma').getClient()
 
 const payloadFields = ['id', 'challengeId', 'memberId', 'memberHandle', 'roleId', 'phaseChangeNotifications', 'created', 'createdBy', 'updated', 'updatedBy']
 
+// Restricted roles that cannot be combined with submitter role
+const RESTRICTED_ROLE_NAMES = [
+  'manager',
+  'copilot',
+  'reviewer',
+  'iterative reviewer',
+  'screener',
+  'checkpoint screener',
+  'checkpoint reviewer',
+  'approver'
+]
+
 let copilotResourceRoleIdsCache
+let restrictedRoleIdsCache
 
 async function getCopilotResourceRoleIds () {
   if (copilotResourceRoleIdsCache) {
@@ -32,6 +45,31 @@ async function getCopilotResourceRoleIds () {
   })
   copilotResourceRoleIdsCache = roles.map(role => role.id)
   return copilotResourceRoleIdsCache
+}
+
+/**
+ * Get resource role IDs that are restricted from being combined with submitter role.
+ * These include: Manager, Copilot, Reviewer, Iterative Reviewer, Screener,
+ * Checkpoint Screener, Checkpoint Reviewer, and Approver.
+ * @returns {Promise<Array<String>>} Array of restricted role IDs
+ */
+async function getRestrictedRoleIds () {
+  if (restrictedRoleIdsCache) {
+    return restrictedRoleIdsCache
+  }
+  const roles = await prisma.resourceRole.findMany({
+    where: {
+      nameLower: {
+        in: RESTRICTED_ROLE_NAMES
+      }
+    },
+    select: {
+      id: true,
+      nameLower: true
+    }
+  })
+  restrictedRoleIdsCache = roles.map(role => role.id)
+  return restrictedRoleIdsCache
 }
 
 /**
@@ -291,6 +329,12 @@ async function init (currentUser, challengeId, resource, isCreated) {
   const { memberId, email } = memberInfoFromDb
   handle = memberInfoFromDb.handle
   const userResources = allResources.filter((r) => _.toLower(r.memberHandle) === _.toLower(handle))
+  
+  let restrictedRoleIds
+  if (isCreated) {
+    restrictedRoleIds = await getRestrictedRoleIds()
+  }
+  
   // Retrieve the constraint - Allowed Registrants
   if (isCreated && resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID) {
     const allowedRegistrants = _.get(challenge, 'constraints.allowedRegistrants')
@@ -307,10 +351,18 @@ async function init (currentUser, challengeId, resource, isCreated) {
         `User ${handle} is not allowed to register.`
       )
     }
-    if (!_.get(challenge, 'task.isTask', false) && (_.toLower(challenge.createdBy) === _.toLower(handle) ||
-      _.some(userResources, r => r.roleId === config.REVIEWER_RESOURCE_ROLE_ID || r.roleId === config.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID))) {
+    // Prevent challenge creator from registering as submitter (for non-tasks)
+    if (!_.get(challenge, 'task.isTask', false) && _.toLower(challenge.createdBy) === _.toLower(memberId)) {
       throw new errors.BadRequestError(
         `User ${handle} is not allowed to register.`
+      )
+    }
+    // Check if user already has a restricted role (Manager, Copilot, Reviewer, etc.)
+    const existingRestrictedRole = _.find(userResources, r => restrictedRoleIds.includes(r.roleId))
+    if (existingRestrictedRole) {
+      const roleNamesList = RESTRICTED_ROLE_NAMES.slice(0, -1).join(', ') + ', or ' + RESTRICTED_ROLE_NAMES.slice(-1)
+      throw new errors.BadRequestError(
+        `User ${handle} is already assigned a restricted role (${roleNamesList}) and cannot be registered as a submitter.`
       )
     }
   }
@@ -343,6 +395,18 @@ async function init (currentUser, challengeId, resource, isCreated) {
 
   // ensure resource role existed
   const resourceRole = await getResourceRole(resource.roleId, isCreated)
+
+  // Check if user is trying to assign a restricted role and already has submitter role
+  if (isCreated) {
+    if (restrictedRoleIds.includes(resource.roleId)) {
+      const existingSubmitterRole = _.find(userResources, r => r.roleId === config.SUBMITTER_RESOURCE_ROLE_ID)
+      if (existingSubmitterRole) {
+        throw new errors.BadRequestError(
+          `User ${handle} is already registered as a submitter and cannot be assigned a ${resourceRole.name} role.`
+        )
+      }
+    }
+  }
 
   // Verify the member has agreed to the challenge terms
   if (isCreated) {
