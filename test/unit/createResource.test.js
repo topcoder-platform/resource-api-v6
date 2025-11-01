@@ -9,6 +9,7 @@ const { v4: uuid } = require('uuid')
 const service = require('../../src/services/ResourceService')
 const ResourceRolePhaseDependencyService = require('../../src/services/ResourceRolePhaseDependencyService')
 const prisma = require('../../src/common/prisma').getClient()
+const helper = require('../../src/common/helper')
 const ResourceRoleService = require('../../src/services/ResourceRoleService')
 const { requestBody, user } = require('../common/testData')
 const { assertValidationError, assertError, assertResource, getRoleIds, clearDependencies } = require('../common/testHelper')
@@ -262,6 +263,39 @@ module.exports = describe('Create resource', () => {
       should.equal(ret.roleId, entity.roleId)
       should.equal(ret.memberHandle.toLowerCase(), entity.memberHandle.toLowerCase())
       await assertResource(ret.id, ret)
+    })
+
+    it('copilot can manage resources without full access flags', async () => {
+      const originalRole = await helper.getById('ResourceRole', copilotRoleId)
+      await ResourceRoleService.updateResourceRole(user.admin, copilotRoleId, {
+        name: originalRole.name,
+        fullReadAccess: false,
+        fullWriteAccess: false,
+        isActive: originalRole.isActive,
+        selfObtainable: originalRole.selfObtainable
+      })
+
+      const entity = resources.createBody('diazz', reviewerRoleId, challengeId2)
+      let createdResource
+      try {
+        createdResource = await service.createResource(user.phead, entity)
+        should.equal(createdResource.roleId, entity.roleId)
+        should.equal(createdResource.memberHandle.toLowerCase(), entity.memberHandle.toLowerCase())
+        await assertResource(createdResource.id, createdResource)
+      } finally {
+        if (createdResource && createdResource.id) {
+          await prisma.resource.deleteMany({
+            where: { id: createdResource.id }
+          })
+        }
+        await ResourceRoleService.updateResourceRole(user.admin, copilotRoleId, {
+          name: originalRole.name,
+          fullReadAccess: originalRole.fullReadAccess,
+          fullWriteAccess: originalRole.fullWriteAccess,
+          isActive: originalRole.isActive,
+          selfObtainable: originalRole.selfObtainable
+        })
+      }
     })
 
     it('create resource for user ghostar 1', async () => {
