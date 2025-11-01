@@ -77,6 +77,12 @@ async function getRestrictedRoleIds () {
  * @param {Array} resources resources of current user for specified challenge id
  */
 async function checkAccess (currentUserResources) {
+  const copilotRoleIds = await getCopilotResourceRoleIds()
+  const hasCopilotRole = _.some(currentUserResources, r => copilotRoleIds.includes(r.roleId))
+  if (hasCopilotRole) {
+    return
+  }
+
   const list = await prisma.resourceRole.findMany({})
   const fullAccessRoles = []
   _.each(list, e => {
