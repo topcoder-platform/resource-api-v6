@@ -535,6 +535,11 @@ async function createResource (currentUser, resource) {
       console.log('config template id', config.get('TOPCROWD_CHALLENGE_TEMPLATE_ID'))
       if (config.get('TOPCROWD_CHALLENGE_TEMPLATE_ID') !== timelineTemplateId) {
         console.log('sending email')
+        const submissionPhase = _.find(challenge.phases, phase => ['Submission', 'Topgear Submission'].includes(phase.name))
+        const submissionEndTime = submissionPhase && submissionPhase.scheduledEndDate
+          ? new Date(submissionPhase.scheduledEndDate).toUTCString()
+          : null
+
         await helper.postEvent(config.EMAIL_NOTIFICATIN_TOPIC, {
           from: config.REGISTRATION_EMAIL.EMAIL_FROM,
           replyTo: config.REGISTRATION_EMAIL.EMAIL_FROM,
@@ -543,7 +548,7 @@ async function createResource (currentUser, resource) {
             handle,
             challengeName: challenge.name,
             forum: forumUrl,
-            submissionEndTime: new Date(_.get(_.find(challenge.phases, phase => phase.name === 'Submission'), 'scheduledEndDate')).toUTCString(),
+            submissionEndTime,
             submitUrl: _.replace(config.REGISTRATION_EMAIL.SUBMIT_URL, ':id', challengeId),
             reviewAppUrl: config.REGISTRATION_EMAIL.REVIEW_APP_URL + challenge.id + '/challenge-details',
             helpUrl: config.REGISTRATION_EMAIL.HELP_URL,
