@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "verify:resources": "node src/scripts/verifyResourceImports.js"
   },
   "keywords": [],
   "author": "",
