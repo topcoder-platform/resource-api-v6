@@ -14,4 +14,4 @@ RUN pnpm install
 RUN pnpm lint
 RUN pnpm lint:fix
 
-RUN pnpm start
+CMD pnpm start
