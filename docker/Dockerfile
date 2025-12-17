@@ -8,9 +8,10 @@ COPY . /resources-api
 # Set working directory for future use
 WORKDIR /resources-api
 
+RUN npm install pnpm -g
 # Install the dependencies from package.json
-RUN --mount=type=ssh yarn install
-RUN yarn lint
-RUN yarn lint:fix
+RUN pnpm install
+RUN pnpm lint
+RUN pnpm lint:fix
 
 CMD node app.js
