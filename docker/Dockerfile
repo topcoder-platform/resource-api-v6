@@ -14,4 +14,4 @@ RUN pnpm install
 RUN pnpm lint
 RUN pnpm lint:fix
 
-CMD node app.js
+RUN pnpm start
