@@ -2,12 +2,12 @@
   {
     "id": "11111111-2222-3333-4444-555555555555",
     "name": "Completed Challenge",
-    "status": "Completed"
+    "status": "COMPLETED"
   },
   {
     "id": "11111111-2222-3333-4444-555555555556",
     "name": "Active Challenge - Registration is Open",
-    "status": "Active",
+    "status": "ACTIVE",
     "phases": [
       {
         "phaseId": "a93544bc-c165-4af4-b55e-18f3593b457a",
@@ -45,7 +45,7 @@
   {
     "id": "11111111-2222-3333-4444-555555555557",
     "name": "Active Challenge - Registration is Closed, Submission is Open",
-    "status": "Active",
+    "status": "ACTIVE",
     "phases": [
       {
         "phaseId": "a93544bc-c165-4af4-b55e-18f3593b457a",
@@ -83,7 +83,7 @@
   {
     "id": "11111111-2222-3333-4444-555555555558",
     "name": "Active Challenge - Submission is Closed, Review phase is Open",
-    "status": "Active",
+    "status": "ACTIVE",
     "phases": [
       {
         "phaseId": "a93544bc-c165-4af4-b55e-18f3593b457a",
@@ -116,7 +116,7 @@
   {
     "id": "11111111-2222-3333-4444-555555555559",
     "name": "Active Task - Registration is Open",
-    "status": "Active",
+    "status": "ACTIVE",
     "task": {
       "isTask": true
     },
@@ -159,7 +159,7 @@
   {
     "id": "11111111-2222-3333-4444-55555555555b",
     "name": "Active Challenge - Set allowedRegistrants - Registration is Open",
-    "status": "Active",
+    "status": "ACTIVE",
     "constraints": {
       "allowedRegistrants": ["lazybaer"]
     },
@@ -200,7 +200,7 @@
   {
     "id": "11111111-2222-3333-4444-55555555555c",
     "name": "Active Challenge - FIRST_2_FINISH - Registration is Open",
-    "status": "Active",
+    "status": "ACTIVE",
     "legacy": {
       "subTrack": "FIRST_2_FINISH"
     },
@@ -229,7 +229,7 @@
   {
     "id": "11111111-2222-3333-4444-55555555555d",
     "name": "Active Challenge - Group Access",
-    "status": "Active",
+    "status": "ACTIVE",
     "groups": [
       "11111111-2222-3333-9999-555555555555"
     ],
@@ -252,7 +252,7 @@
   {
     "id": "11111111-2222-3333-4444-55555555555e",
     "name": "Active Challenge - Group Access",
-    "status": "Active",
+    "status": "ACTIVE",
     "groups": [
       "11111111-2222-3333-9999-555555555555",
       "11111111-2222-3333-9999-555555555557"

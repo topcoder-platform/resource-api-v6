@@ -40,7 +40,7 @@ const mockChallengeApi = http.createServer((req, res) => {
         } else {
           return send(res, 200, {
             id: challengeId,
-            status: 'Active',
+            status: 'ACTIVE',
             task: {
               isTask: challengeId === 'fe6d0a58-ce7d-4521-8501-b8132b1c0392'
             },
