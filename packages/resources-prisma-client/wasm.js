@@ -159,13 +159,13 @@ exports.Prisma.ModelName = {
  */
 const config = {
   "generator": {
-    "name": "client",
+    "name": "externalClient",
     "provider": {
       "fromEnvVar": null,
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/prisma/generated/client",
+      "value": "/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/packages/resources-prisma-client",
       "fromEnvVar": null
     },
     "config": {
@@ -176,6 +176,10 @@ const config = {
         "fromEnvVar": null,
         "value": "darwin-arm64",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "debian-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -185,7 +189,7 @@ const config = {
   "relativeEnvPaths": {
     "rootEnvPath": null
   },
-  "relativePath": "../..",
+  "relativePath": "../../prisma",
   "clientVersion": "6.19.2",
   "engineVersion": "c2990dca591cba766e3b7ef5d9e8a84796e47ab7",
   "datasourceNames": [
@@ -201,8 +205,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel ResourceRole {\n  id              String    @id @default(uuid())\n  name            String\n  nameLower       String\n  fullReadAccess  Boolean\n  fullWriteAccess Boolean\n  isActive        Boolean\n  selfObtainable  Boolean\n  legacyId        Int?\n  createdAt       DateTime  @default(now())\n  createdBy       String\n  updatedAt       DateTime? @updatedAt\n  updatedBy       String?\n\n  resources                     Resource[]\n  resourceRolePhaseDependencies ResourceRolePhaseDependency[]\n\n  // Indexes for faster search\n  @@index([nameLower], map: \"resourcerole-nameLower-index\")\n  @@index([isActive], map: \"resourcerole-isActive-index\")\n  @@index([isActive, selfObtainable], map: \"resourcerole-isActiveSelfObtainable-index\")\n}\n\nmodel Resource {\n  id                       String    @id @default(uuid())\n  challengeId              String\n  memberId                 String\n  memberHandle             String\n  roleId                   String\n  legacyId                 Int?\n  phaseChangeNotifications Boolean?  @default(true)\n  createdAt                DateTime  @default(now())\n  createdBy                String\n  updatedAt                DateTime? @updatedAt\n  updatedBy                String?\n\n  resourceRole ResourceRole @relation(fields: [roleId], references: [id])\n\n  // Indexes for faster searches\n  @@index([challengeId, memberId], map: \"resource-challengeIdMemberId-index\")\n  @@index([memberId, roleId], map: \"resource-memberIdRoleId-index\")\n  @@index([roleId], map: \"resource-roleId-index\")\n  @@index([memberId, challengeId], map: \"resource-memberIdChallengeId-index\")\n}\n\nmodel ResourceRolePhaseDependency {\n  id             String       @id @default(uuid())\n  phaseId        String\n  resourceRoleId String\n  phaseState     Boolean\n  createdAt      DateTime     @default(now())\n  createdBy      String\n  updatedAt      DateTime?    @updatedAt\n  updatedBy      String?\n  resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])\n\n  @@unique([phaseId, resourceRoleId], map: \"resourcerolephase-phaseId-resourceRoleId-unique\")\n  @@index([resourceRoleId], map: \"resourcerolephasedependency-resourceRoleId-index\")\n}\n",
-  "inlineSchemaHash": "c9b1da783b893b405173b8a874d316aaf3ffe5c920fe44767f17de9586fc61da",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n}\n\ngenerator externalClient {\n  provider      = \"prisma-client-js\"\n  output        = \"../packages/resources-prisma-client\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel ResourceRole {\n  id              String    @id @default(uuid())\n  name            String\n  nameLower       String\n  fullReadAccess  Boolean\n  fullWriteAccess Boolean\n  isActive        Boolean\n  selfObtainable  Boolean\n  legacyId        Int?\n  createdAt       DateTime  @default(now())\n  createdBy       String\n  updatedAt       DateTime? @updatedAt\n  updatedBy       String?\n\n  resources                     Resource[]\n  resourceRolePhaseDependencies ResourceRolePhaseDependency[]\n\n  // Indexes for faster search\n  @@index([nameLower], map: \"resourcerole-nameLower-index\")\n  @@index([isActive], map: \"resourcerole-isActive-index\")\n  @@index([isActive, selfObtainable], map: \"resourcerole-isActiveSelfObtainable-index\")\n}\n\nmodel Resource {\n  id                       String    @id @default(uuid())\n  challengeId              String\n  memberId                 String\n  memberHandle             String\n  roleId                   String\n  legacyId                 Int?\n  phaseChangeNotifications Boolean?  @default(true)\n  createdAt                DateTime  @default(now())\n  createdBy                String\n  updatedAt                DateTime? @updatedAt\n  updatedBy                String?\n\n  resourceRole ResourceRole @relation(fields: [roleId], references: [id])\n\n  // Indexes for faster searches\n  @@index([challengeId, memberId], map: \"resource-challengeIdMemberId-index\")\n  @@index([memberId, roleId], map: \"resource-memberIdRoleId-index\")\n  @@index([roleId], map: \"resource-roleId-index\")\n  @@index([memberId, challengeId], map: \"resource-memberIdChallengeId-index\")\n}\n\nmodel ResourceRolePhaseDependency {\n  id             String       @id @default(uuid())\n  phaseId        String\n  resourceRoleId String\n  phaseState     Boolean\n  createdAt      DateTime     @default(now())\n  createdBy      String\n  updatedAt      DateTime?    @updatedAt\n  updatedBy      String?\n  resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])\n\n  @@unique([phaseId, resourceRoleId], map: \"resourcerolephase-phaseId-resourceRoleId-unique\")\n  @@index([resourceRoleId], map: \"resourcerolephasedependency-resourceRoleId-index\")\n}\n",
+  "inlineSchemaHash": "28fa5851254b0ab742e4d96de1bb36f04367fa646912d6020d359326eaea3ca2",
   "copyEngine": true
 }
 config.dirname = '/'
