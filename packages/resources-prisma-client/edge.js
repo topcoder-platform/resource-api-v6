@@ -3,7 +3,7 @@
 /* eslint-disable */
 // biome-ignore-all lint: generated file
 
-Object.defineProperty(exports, '__esModule', { value: true })
+Object.defineProperty(exports, "__esModule", { value: true });
 
 const {
   PrismaClientKnownRequestError,
@@ -26,8 +26,9 @@ const {
   defineDmmfProperty,
   Public,
   getRuntime,
-  createParam
+  createParam,
 } = require('./runtime/edge.js')
+
 
 const Prisma = {}
 
@@ -39,11 +40,11 @@ exports.$Enums = {}
  * Query Engine version: c2990dca591cba766e3b7ef5d9e8a84796e47ab7
  */
 Prisma.prismaVersion = {
-  client: '6.19.2',
-  engine: 'c2990dca591cba766e3b7ef5d9e8a84796e47ab7'
+  client: "6.19.2",
+  engine: "c2990dca591cba766e3b7ef5d9e8a84796e47ab7"
 }
 
-Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError
+Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
 Prisma.PrismaClientUnknownRequestError = PrismaClientUnknownRequestError
 Prisma.PrismaClientRustPanicError = PrismaClientRustPanicError
 Prisma.PrismaClientInitializationError = PrismaClientInitializationError
@@ -78,6 +79,10 @@ Prisma.NullTypes = {
   AnyNull: objectEnumValues.classes.AnyNull
 }
 
+
+
+
+
 /**
  * Enums
  */
@@ -86,7 +91,7 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   ReadCommitted: 'ReadCommitted',
   RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
-})
+});
 
 exports.Prisma.ResourceRoleScalarFieldEnum = {
   id: 'id',
@@ -101,7 +106,7 @@ exports.Prisma.ResourceRoleScalarFieldEnum = {
   createdBy: 'createdBy',
   updatedAt: 'updatedAt',
   updatedBy: 'updatedBy'
-}
+};
 
 exports.Prisma.ResourceScalarFieldEnum = {
   id: 'id',
@@ -115,7 +120,7 @@ exports.Prisma.ResourceScalarFieldEnum = {
   createdBy: 'createdBy',
   updatedAt: 'updatedAt',
   updatedBy: 'updatedBy'
-}
+};
 
 exports.Prisma.ResourceRolePhaseDependencyScalarFieldEnum = {
   id: 'id',
@@ -126,86 +131,88 @@ exports.Prisma.ResourceRolePhaseDependencyScalarFieldEnum = {
   createdBy: 'createdBy',
   updatedAt: 'updatedAt',
   updatedBy: 'updatedBy'
-}
+};
 
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
-}
+};
 
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
-}
+};
 
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
-}
+};
+
 
 exports.Prisma.ModelName = {
   ResourceRole: 'ResourceRole',
   Resource: 'Resource',
   ResourceRolePhaseDependency: 'ResourceRolePhaseDependency'
-}
+};
 /**
  * Create the Client
  */
 const config = {
-  'generator': {
-    'name': 'externalClient',
-    'provider': {
-      'fromEnvVar': null,
-      'value': 'prisma-client-js'
+  "generator": {
+    "name": "externalClient",
+    "provider": {
+      "fromEnvVar": null,
+      "value": "prisma-client-js"
     },
-    'output': {
-      'value': '/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/packages/resources-prisma-client',
-      'fromEnvVar': null
+    "output": {
+      "value": "/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/packages/resources-prisma-client",
+      "fromEnvVar": null
     },
-    'config': {
-      'engineType': 'library'
+    "config": {
+      "transpile": "true",
+      "engineType": "library"
     },
-    'binaryTargets': [
+    "binaryTargets": [
       {
-        'fromEnvVar': null,
-        'value': 'darwin-arm64',
-        'native': true
+        "fromEnvVar": null,
+        "value": "darwin-arm64",
+        "native": true
       },
       {
-        'fromEnvVar': null,
-        'value': 'debian-openssl-3.0.x'
+        "fromEnvVar": null,
+        "value": "debian-openssl-3.0.x"
       }
     ],
-    'previewFeatures': [],
-    'sourceFilePath': '/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/prisma/schema.prisma',
-    'isCustomOutput': true
+    "previewFeatures": [],
+    "sourceFilePath": "/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/prisma/schema.prisma",
+    "isCustomOutput": true
   },
-  'relativeEnvPaths': {
-    'rootEnvPath': null
+  "relativeEnvPaths": {
+    "rootEnvPath": null
   },
-  'relativePath': '../../prisma',
-  'clientVersion': '6.19.2',
-  'engineVersion': 'c2990dca591cba766e3b7ef5d9e8a84796e47ab7',
-  'datasourceNames': [
-    'db'
+  "relativePath": "../../prisma",
+  "clientVersion": "6.19.2",
+  "engineVersion": "c2990dca591cba766e3b7ef5d9e8a84796e47ab7",
+  "datasourceNames": [
+    "db"
   ],
-  'activeProvider': 'postgresql',
-  'postinstall': false,
-  'inlineDatasources': {
-    'db': {
-      'url': {
-        'fromEnvVar': 'DATABASE_URL',
-        'value': null
+  "activeProvider": "postgresql",
+  "postinstall": false,
+  "inlineDatasources": {
+    "db": {
+      "url": {
+        "fromEnvVar": "DATABASE_URL",
+        "value": null
       }
     }
   },
-  'inlineSchema': 'generator client {\n  provider = "prisma-client-js"\n}\n\ngenerator externalClient {\n  provider      = "prisma-client-js"\n  output        = "../packages/resources-prisma-client"\n  binaryTargets = ["native", "debian-openssl-3.0.x"]\n}\n\ndatasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}\n\nmodel ResourceRole {\n  id              String    @id @default(uuid())\n  name            String\n  nameLower       String\n  fullReadAccess  Boolean\n  fullWriteAccess Boolean\n  isActive        Boolean\n  selfObtainable  Boolean\n  legacyId        Int?\n  createdAt       DateTime  @default(now())\n  createdBy       String\n  updatedAt       DateTime? @updatedAt\n  updatedBy       String?\n\n  resources                     Resource[]\n  resourceRolePhaseDependencies ResourceRolePhaseDependency[]\n\n  // Indexes for faster search\n  @@index([nameLower], map: "resourcerole-nameLower-index")\n  @@index([isActive], map: "resourcerole-isActive-index")\n  @@index([isActive, selfObtainable], map: "resourcerole-isActiveSelfObtainable-index")\n}\n\nmodel Resource {\n  id                       String    @id @default(uuid())\n  challengeId              String\n  memberId                 String\n  memberHandle             String\n  roleId                   String\n  legacyId                 Int?\n  phaseChangeNotifications Boolean?  @default(true)\n  createdAt                DateTime  @default(now())\n  createdBy                String\n  updatedAt                DateTime? @updatedAt\n  updatedBy                String?\n\n  resourceRole ResourceRole @relation(fields: [roleId], references: [id])\n\n  // Indexes for faster searches\n  @@index([challengeId, memberId], map: "resource-challengeIdMemberId-index")\n  @@index([memberId, roleId], map: "resource-memberIdRoleId-index")\n  @@index([roleId], map: "resource-roleId-index")\n  @@index([memberId, challengeId], map: "resource-memberIdChallengeId-index")\n}\n\nmodel ResourceRolePhaseDependency {\n  id             String       @id @default(uuid())\n  phaseId        String\n  resourceRoleId String\n  phaseState     Boolean\n  createdAt      DateTime     @default(now())\n  createdBy      String\n  updatedAt      DateTime?    @updatedAt\n  updatedBy      String?\n  resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])\n\n  @@unique([phaseId, resourceRoleId], map: "resourcerolephase-phaseId-resourceRoleId-unique")\n  @@index([resourceRoleId], map: "resourcerolephasedependency-resourceRoleId-index")\n}\n',
-  'inlineSchemaHash': '28fa5851254b0ab742e4d96de1bb36f04367fa646912d6020d359326eaea3ca2',
-  'copyEngine': true
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n}\n\ngenerator externalClient {\n  provider      = \"prisma-client-js\"\n  output        = \"../packages/resources-prisma-client\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n  transpile     = true\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel ResourceRole {\n  id              String    @id @default(uuid())\n  name            String\n  nameLower       String\n  fullReadAccess  Boolean\n  fullWriteAccess Boolean\n  isActive        Boolean\n  selfObtainable  Boolean\n  legacyId        Int?\n  createdAt       DateTime  @default(now())\n  createdBy       String\n  updatedAt       DateTime? @updatedAt\n  updatedBy       String?\n\n  resources                     Resource[]\n  resourceRolePhaseDependencies ResourceRolePhaseDependency[]\n\n  // Indexes for faster search\n  @@index([nameLower], map: \"resourcerole-nameLower-index\")\n  @@index([isActive], map: \"resourcerole-isActive-index\")\n  @@index([isActive, selfObtainable], map: \"resourcerole-isActiveSelfObtainable-index\")\n}\n\nmodel Resource {\n  id                       String    @id @default(uuid())\n  challengeId              String\n  memberId                 String\n  memberHandle             String\n  roleId                   String\n  legacyId                 Int?\n  phaseChangeNotifications Boolean?  @default(true)\n  createdAt                DateTime  @default(now())\n  createdBy                String\n  updatedAt                DateTime? @updatedAt\n  updatedBy                String?\n\n  resourceRole ResourceRole @relation(fields: [roleId], references: [id])\n\n  // Indexes for faster searches\n  @@index([challengeId, memberId], map: \"resource-challengeIdMemberId-index\")\n  @@index([memberId, roleId], map: \"resource-memberIdRoleId-index\")\n  @@index([roleId], map: \"resource-roleId-index\")\n  @@index([memberId, challengeId], map: \"resource-memberIdChallengeId-index\")\n}\n\nmodel ResourceRolePhaseDependency {\n  id             String       @id @default(uuid())\n  phaseId        String\n  resourceRoleId String\n  phaseState     Boolean\n  createdAt      DateTime     @default(now())\n  createdBy      String\n  updatedAt      DateTime?    @updatedAt\n  updatedBy      String?\n  resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])\n\n  @@unique([phaseId, resourceRoleId], map: \"resourcerolephase-phaseId-resourceRoleId-unique\")\n  @@index([resourceRoleId], map: \"resourcerolephasedependency-resourceRoleId-index\")\n}\n",
+  "inlineSchemaHash": "0d54aec75d746d3e335bb13be14ab16e9b588979669f89bc7b0353051afc7574",
+  "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse('{"models":{"ResourceRole":{"dbName":null,"schema":null,"fields":[{"name":"id","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":true,"isReadOnly":false,"hasDefaultValue":true,"type":"String","nativeType":null,"default":{"name":"uuid","args":[4]},"isGenerated":false,"isUpdatedAt":false},{"name":"name","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"nameLower","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"fullReadAccess","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Boolean","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"fullWriteAccess","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Boolean","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"isActive","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Boolean","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"selfObtainable","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Boolean","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"legacyId","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Int","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"createdAt","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":true,"type":"DateTime","nativeType":null,"default":{"name":"now","args":[]},"isGenerated":false,"isUpdatedAt":false},{"name":"createdBy","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"updatedAt","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"DateTime","nativeType":null,"isGenerated":false,"isUpdatedAt":true},{"name":"updatedBy","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"resources","kind":"object","isList":true,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Resource","nativeType":null,"relationName":"ResourceToResourceRole","relationFromFields":[],"relationToFields":[],"isGenerated":false,"isUpdatedAt":false},{"name":"resourceRolePhaseDependencies","kind":"object","isList":true,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"ResourceRolePhaseDependency","nativeType":null,"relationName":"ResourceRoleToResourceRolePhaseDependency","relationFromFields":[],"relationToFields":[],"isGenerated":false,"isUpdatedAt":false}],"primaryKey":null,"uniqueFields":[],"uniqueIndexes":[],"isGenerated":false},"Resource":{"dbName":null,"schema":null,"fields":[{"name":"id","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":true,"isReadOnly":false,"hasDefaultValue":true,"type":"String","nativeType":null,"default":{"name":"uuid","args":[4]},"isGenerated":false,"isUpdatedAt":false},{"name":"challengeId","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"memberId","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"memberHandle","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"roleId","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":true,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"legacyId","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Int","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"phaseChangeNotifications","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":true,"type":"Boolean","nativeType":null,"default":true,"isGenerated":false,"isUpdatedAt":false},{"name":"createdAt","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":true,"type":"DateTime","nativeType":null,"default":{"name":"now","args":[]},"isGenerated":false,"isUpdatedAt":false},{"name":"createdBy","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"updatedAt","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"DateTime","nativeType":null,"isGenerated":false,"isUpdatedAt":true},{"name":"updatedBy","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"resourceRole","kind":"object","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"ResourceRole","nativeType":null,"relationName":"ResourceToResourceRole","relationFromFields":["roleId"],"relationToFields":["id"],"isGenerated":false,"isUpdatedAt":false}],"primaryKey":null,"uniqueFields":[],"uniqueIndexes":[],"isGenerated":false},"ResourceRolePhaseDependency":{"dbName":null,"schema":null,"fields":[{"name":"id","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":true,"isReadOnly":false,"hasDefaultValue":true,"type":"String","nativeType":null,"default":{"name":"uuid","args":[4]},"isGenerated":false,"isUpdatedAt":false},{"name":"phaseId","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"resourceRoleId","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":true,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"phaseState","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"Boolean","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"createdAt","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":true,"type":"DateTime","nativeType":null,"default":{"name":"now","args":[]},"isGenerated":false,"isUpdatedAt":false},{"name":"createdBy","kind":"scalar","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"updatedAt","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"DateTime","nativeType":null,"isGenerated":false,"isUpdatedAt":true},{"name":"updatedBy","kind":"scalar","isList":false,"isRequired":false,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"String","nativeType":null,"isGenerated":false,"isUpdatedAt":false},{"name":"resourceRole","kind":"object","isList":false,"isRequired":true,"isUnique":false,"isId":false,"isReadOnly":false,"hasDefaultValue":false,"type":"ResourceRole","nativeType":null,"relationName":"ResourceRoleToResourceRolePhaseDependency","relationFromFields":["resourceRoleId"],"relationToFields":["id"],"isGenerated":false,"isUpdatedAt":false}],"primaryKey":null,"uniqueFields":[["phaseId","resourceRoleId"]],"uniqueIndexes":[{"name":null,"fields":["phaseId","resourceRoleId"]}],"isGenerated":false}},"enums":{},"types":{}}')
+config.runtimeDataModel = JSON.parse("{\"models\":{\"ResourceRole\":{\"dbName\":null,\"schema\":null,\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":true,\"isReadOnly\":false,\"hasDefaultValue\":true,\"type\":\"String\",\"nativeType\":null,\"default\":{\"name\":\"uuid\",\"args\":[4]},\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"name\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"nameLower\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"fullReadAccess\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Boolean\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"fullWriteAccess\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Boolean\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"isActive\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Boolean\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"selfObtainable\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Boolean\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"legacyId\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Int\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":true,\"type\":\"DateTime\",\"nativeType\":null,\"default\":{\"name\":\"now\",\"args\":[]},\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"createdBy\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"DateTime\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":true},{\"name\":\"updatedBy\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"resources\",\"kind\":\"object\",\"isList\":true,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Resource\",\"nativeType\":null,\"relationName\":\"ResourceToResourceRole\",\"relationFromFields\":[],\"relationToFields\":[],\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"resourceRolePhaseDependencies\",\"kind\":\"object\",\"isList\":true,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"ResourceRolePhaseDependency\",\"nativeType\":null,\"relationName\":\"ResourceRoleToResourceRolePhaseDependency\",\"relationFromFields\":[],\"relationToFields\":[],\"isGenerated\":false,\"isUpdatedAt\":false}],\"primaryKey\":null,\"uniqueFields\":[],\"uniqueIndexes\":[],\"isGenerated\":false},\"Resource\":{\"dbName\":null,\"schema\":null,\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":true,\"isReadOnly\":false,\"hasDefaultValue\":true,\"type\":\"String\",\"nativeType\":null,\"default\":{\"name\":\"uuid\",\"args\":[4]},\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"challengeId\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"memberId\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"memberHandle\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"roleId\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":true,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"legacyId\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Int\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"phaseChangeNotifications\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":true,\"type\":\"Boolean\",\"nativeType\":null,\"default\":true,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":true,\"type\":\"DateTime\",\"nativeType\":null,\"default\":{\"name\":\"now\",\"args\":[]},\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"createdBy\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"DateTime\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":true},{\"name\":\"updatedBy\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"resourceRole\",\"kind\":\"object\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"ResourceRole\",\"nativeType\":null,\"relationName\":\"ResourceToResourceRole\",\"relationFromFields\":[\"roleId\"],\"relationToFields\":[\"id\"],\"isGenerated\":false,\"isUpdatedAt\":false}],\"primaryKey\":null,\"uniqueFields\":[],\"uniqueIndexes\":[],\"isGenerated\":false},\"ResourceRolePhaseDependency\":{\"dbName\":null,\"schema\":null,\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":true,\"isReadOnly\":false,\"hasDefaultValue\":true,\"type\":\"String\",\"nativeType\":null,\"default\":{\"name\":\"uuid\",\"args\":[4]},\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"phaseId\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"resourceRoleId\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":true,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"phaseState\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"Boolean\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":true,\"type\":\"DateTime\",\"nativeType\":null,\"default\":{\"name\":\"now\",\"args\":[]},\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"createdBy\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"DateTime\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":true},{\"name\":\"updatedBy\",\"kind\":\"scalar\",\"isList\":false,\"isRequired\":false,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"String\",\"nativeType\":null,\"isGenerated\":false,\"isUpdatedAt\":false},{\"name\":\"resourceRole\",\"kind\":\"object\",\"isList\":false,\"isRequired\":true,\"isUnique\":false,\"isId\":false,\"isReadOnly\":false,\"hasDefaultValue\":false,\"type\":\"ResourceRole\",\"nativeType\":null,\"relationName\":\"ResourceRoleToResourceRolePhaseDependency\",\"relationFromFields\":[\"resourceRoleId\"],\"relationToFields\":[\"id\"],\"isGenerated\":false,\"isUpdatedAt\":false}],\"primaryKey\":null,\"uniqueFields\":[[\"phaseId\",\"resourceRoleId\"]],\"uniqueIndexes\":[{\"name\":null,\"fields\":[\"phaseId\",\"resourceRoleId\"]}],\"isGenerated\":false}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = undefined
 config.compilerWasm = undefined
@@ -223,3 +230,4 @@ if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !
 const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
+
