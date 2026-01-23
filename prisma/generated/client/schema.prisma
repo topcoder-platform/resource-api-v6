@@ -9,7 +9,7 @@ datasource db {
 }
 
 model ResourceRole {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   name            String
   nameLower       String
   fullReadAccess  Boolean
@@ -17,7 +17,7 @@ model ResourceRole {
   isActive        Boolean
   selfObtainable  Boolean
   legacyId        Int?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
   createdBy       String
   updatedAt       DateTime? @updatedAt
   updatedBy       String?
@@ -32,17 +32,17 @@ model ResourceRole {
 }
 
 model Resource {
-  id           String   @id @default(uuid())
-  challengeId  String
-  memberId     String
-  memberHandle String
-  roleId       String
-  legacyId     Int?
-  phaseChangeNotifications Boolean? @default(true)
-  createdAt    DateTime @default(now())
-  createdBy    String
-  updatedAt    DateTime? @updatedAt
-  updatedBy    String?
+  id                       String    @id @default(uuid())
+  challengeId              String
+  memberId                 String
+  memberHandle             String
+  roleId                   String
+  legacyId                 Int?
+  phaseChangeNotifications Boolean?  @default(true)
+  createdAt                DateTime  @default(now())
+  createdBy                String
+  updatedAt                DateTime? @updatedAt
+  updatedBy                String?
 
   resourceRole ResourceRole @relation(fields: [roleId], references: [id])
 
