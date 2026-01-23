@@ -69,7 +69,8 @@
       "mocha"
     ],
     "ignore": [
-      "migrator/**"
+      "migrator/**",
+      "packages/**"
     ]
   },
   "nyc": {
