@@ -119,7 +119,7 @@ workflows:
             only:
             - develop
             - hotfix/deploy
-            - pm-2539
+            - PM-3458
 
     # Production builds are exectuted only on tagged commits to the testing
     # master branch.
