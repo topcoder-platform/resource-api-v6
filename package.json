@@ -62,7 +62,7 @@
     "schema": "./prisma/schema.prisma"
   },
   "engines": {
-    "node": "18.x"
+    "node": ">=22.0.0"
   },
   "standard": {
     "env": [
@@ -82,7 +82,7 @@
     ]
   },
   "volta": {
-    "node": "18",
+    "node": "20",
     "yarn": "1.22.19"
   }
 }
