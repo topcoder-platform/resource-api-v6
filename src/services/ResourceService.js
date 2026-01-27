@@ -133,6 +133,18 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
     }
   }
 
+  let resolvedMemberId = memberId ? _.toString(memberId) : null
+  if (!resolvedMemberId && memberHandle) {
+    try {
+      const memberDetails = await helper.getMemberDetailsByHandle(memberHandle)
+      if (memberDetails && !_.isNil(memberDetails.memberId)) {
+        resolvedMemberId = _.toString(memberDetails.memberId)
+      }
+    } catch (err) {
+      logger.warn(`getResources unable to resolve memberHandle=${memberHandle} to memberId: ${err.message || err}`)
+    }
+  }
+
   const prismaFilter = { where: { AND: [] } }
 
   let hasFullAccess
@@ -163,10 +175,10 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
         userHasCopilotRole = resources.some(resource => copilotRoleIds.includes(resource.roleId))
       }
     }
-    if (memberId && _.toString(memberId) !== _.toString(currentUser.userId)) {
+    if (resolvedMemberId && _.toString(resolvedMemberId) !== _.toString(currentUser.userId)) {
       throw new errors.ForbiddenError('You are not allowed to perform this operation!')
     }
-    if (memberHandle && memberHandle !== currentUser.handle) {
+    if (!resolvedMemberId && memberHandle && memberHandle !== currentUser.handle) {
       throw new errors.ForbiddenError('You are not allowed to perform this operation!')
     }
   }
@@ -195,10 +207,10 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
     if (roleId) {
       prismaFilter.where.AND.push({ roleId })
     }
-    if (memberId) {
-      prismaFilter.where.AND.push({ memberId })
+    if (resolvedMemberId) {
+      prismaFilter.where.AND.push({ memberId: resolvedMemberId })
     } else if (memberHandle) {
-      prismaFilter.where.AND.push({ memberHandle })
+      prismaFilter.where.AND.push({ memberId: '__no_match__' })
     }
   }
 
