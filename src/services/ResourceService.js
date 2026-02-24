@@ -159,6 +159,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   // Check if the user has a resource with full access on the challenge
   const isMachineUser = !!(currentUser && currentUser.isMachine)
   const isAdminUser = !!(currentUser && helper.hasAdminRole(currentUser))
+  const isElevatedUser = !!(currentUser && helper.hasElevatedRole(currentUser))
 
   if (currentUser && !isMachineUser && !isAdminUser) {
     if (challengeId) {
@@ -182,7 +183,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
       }
     }
     logger.info(
-      `userHasCopilotRole=${userHasCopilotRole}`
+      `userHasCopilotRole= ${challengeId} ${userHasCopilotRole}`
     )
     if (resolvedMemberId && _.toString(resolvedMemberId) !== _.toString(currentUser.userId)) {
       throw new errors.ForbiddenError('You are not allowed to perform this operation!')
@@ -251,10 +252,11 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
 
   let memberObjects = await helper.getMemberInfoByIdList(memberIds)
   logger.info(`Retrieved member objects: ${JSON.stringify(memberObjects)}`)
+  logger.info(`Has elevated role: ${isElevatedUser}`)
 
-  const shouldExposeMemberEmail = Boolean(challengeId) && (isMachineUser || isAdminUser || userHasCopilotRole)
+  const shouldExposeMemberEmail = Boolean(challengeId) && (isMachineUser || isElevatedUser || userHasCopilotRole)
   logger.info(
-    `shouldExposeMemberEmail=${shouldExposeMemberEmail}`
+    `shouldExposeMemberEmail= ${challengeId} ${shouldExposeMemberEmail}`
   )
   const completeResources = []
   for (const resource of resources) {

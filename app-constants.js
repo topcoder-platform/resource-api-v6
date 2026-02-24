@@ -6,7 +6,9 @@ const UserRoles = {
   Admin: 'administrator',
   Copilot: 'copilot',
   Manager: 'Connect Manager',
-  User: 'Topcoder User'
+  User: 'Topcoder User',
+  ProjectManager: 'Project Manager',
+  TalentManager: 'Talent Manager'
 }
 
 const ChallengeStatuses = {

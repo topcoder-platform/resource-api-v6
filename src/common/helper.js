@@ -96,6 +96,26 @@ function hasAdminRole (authUser) {
 }
 
 /**
+ * Check if the user has admin/PM/TM/Copilot role
+ * @param {Object} authUser the user
+ */
+function hasElevatedRole (authUser) {
+  if (!authUser || !Array.isArray(authUser.roles)) {
+    return false
+  }
+  for (let i = 0; i < authUser.roles.length; i++) {
+    if (authUser.roles[i].toLowerCase() === constants.UserRoles.Admin.toLowerCase() ||
+      authUser.roles[i].toLowerCase() === constants.UserRoles.Copilot.toLowerCase() ||
+     authUser.roles[i].toLowerCase() === constants.UserRoles.ProjectManager.toLowerCase() ||
+     authUser.roles[i].toLowerCase() === constants.UserRoles.TalentManager.toLowerCase()
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
  * Get user handle from token
  *
  * @param {Object} authUser request auth user
@@ -562,6 +582,7 @@ module.exports = {
   getMemberDetailsById,
   checkIfExists,
   hasAdminRole,
+  hasElevatedRole,
   getUserHandleOrSub,
   getUserIdFromToken,
   getById,
