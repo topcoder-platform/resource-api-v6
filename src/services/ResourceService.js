@@ -33,6 +33,9 @@ let restrictedRoleIdsCache
 
 async function getCopilotResourceRoleIds () {
   if (copilotResourceRoleIdsCache) {
+    logger.info(
+      `getCopilotResourceRoleIds (CACHE HIT) → ids=${JSON.stringify(copilotResourceRoleIdsCache)}`
+    )
     return copilotResourceRoleIdsCache
   }
   const roles = await prisma.resourceRole.findMany({
@@ -43,6 +46,9 @@ async function getCopilotResourceRoleIds () {
       id: true
     }
   })
+  logger.info(
+    `getCopilotResourceRoleIds (DB RESULT) → roles=${JSON.stringify(roles)}`
+  )
   copilotResourceRoleIdsCache = roles.map(role => role.id)
   return copilotResourceRoleIdsCache
 }
@@ -175,6 +181,9 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
         userHasCopilotRole = resources.some(resource => copilotRoleIds.includes(resource.roleId))
       }
     }
+    logger.info(
+      `userHasCopilotRole=${userHasCopilotRole}`
+    )
     if (resolvedMemberId && _.toString(resolvedMemberId) !== _.toString(currentUser.userId)) {
       throw new errors.ForbiddenError('You are not allowed to perform this operation!')
     }
@@ -244,6 +253,9 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   logger.info(`Retrieved member objects: ${JSON.stringify(memberObjects)}`)
 
   const shouldExposeMemberEmail = Boolean(challengeId) && (isMachineUser || isAdminUser || userHasCopilotRole)
+  logger.info(
+    `shouldExposeMemberEmail=${shouldExposeMemberEmail}`
+  )
   const completeResources = []
   for (const resource of resources) {
     const memberInfo = _.find(memberObjects, (o) => _.toNumber('' + o.userId) === _.toNumber(resource.memberId))
