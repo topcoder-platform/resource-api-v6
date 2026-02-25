@@ -254,7 +254,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   logger.info(`Retrieved member objects: ${JSON.stringify(memberObjects)}`)
   logger.info(`Has elevated role: ${isElevatedUser}`)
 
-  const shouldExposeMemberEmail = Boolean(challengeId) && (isMachineUser || isElevatedUser || userHasCopilotRole)
+  const shouldExposeMemberEmail = Boolean(challengeId) && (isMachineUser || isAdminUser || userHasCopilotRole)
   logger.info(
     `shouldExposeMemberEmail= ${challengeId} ${shouldExposeMemberEmail}`
   )
