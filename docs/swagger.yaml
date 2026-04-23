@@ -135,7 +135,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/ResourceRequestBody'
+            $ref: '#/definitions/CreateResourceRequestBody'
       responses:
         '200':
           description: OK - the request was successful
@@ -741,6 +741,32 @@ definitions:
         type: string
         format: UUID
         description: The resource role ID
+  CreateResourceRequestBody:
+    type: object
+    required:
+      - challengeId
+      - memberHandle
+      - memberId
+      - roleId
+    properties:
+      challengeId:
+        type: string
+        format: UUID
+        description: The challenge id
+      memberHandle:
+        type: string
+        description: The member handle
+      memberId:
+        type: string
+        description: The member id
+      roleId:
+        type: string
+        format: UUID
+        description: The resource role ID
+      sendEmail:
+        type: boolean
+        default: true
+        description: Set to `false` to create the resource without emitting the registration email event.
   ResourceRolePhaseDependencyRequestBody:
     type: object
     required:
