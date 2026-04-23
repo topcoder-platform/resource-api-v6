@@ -265,6 +265,69 @@ module.exports = describe('Create resource', () => {
       await assertResource(ret.id, ret)
     })
 
+    it('create submitter resource sends registration email by default', async () => {
+      const entity = resources.createBody('emailnotifyuser', submitterRoleId, challengeId3)
+      const postedEvents = []
+      const originalPostEvent = helper.postEvent
+      let createdResourceId
+
+      helper.postEvent = async (topic, payload) => {
+        postedEvents.push({ topic, payload })
+      }
+
+      try {
+        const ret = await service.createResource(user.m2m, entity)
+        createdResourceId = ret.id
+        const emailEvent = postedEvents.find((event) => event.topic === config.EMAIL_NOTIFICATIN_TOPIC)
+
+        should.exist(emailEvent)
+        should.deepEqual(emailEvent.payload.recipients, ['test@topcoder.com'])
+        should.equal(emailEvent.payload.data.handle, 'emailnotifyuser')
+      } finally {
+        helper.postEvent = originalPostEvent
+        if (createdResourceId) {
+          await prisma.resource.deleteMany({
+            where: { id: createdResourceId }
+          })
+        }
+      }
+    })
+
+    it('create submitter resource skips registration email when sendEmail is false', async () => {
+      const entity = {
+        ...resources.createBody('emailnotifyuser-noemail', submitterRoleId, challengeId3),
+        sendEmail: false
+      }
+      const postedEvents = []
+      const originalPostEvent = helper.postEvent
+      let createdResourceId
+
+      helper.postEvent = async (topic, payload) => {
+        postedEvents.push({ topic, payload })
+      }
+
+      try {
+        const ret = await service.createResource(user.m2m, entity)
+        createdResourceId = ret.id
+
+        should.equal(
+          postedEvents.some((event) => event.topic === config.EMAIL_NOTIFICATIN_TOPIC),
+          false
+        )
+        should.equal(
+          postedEvents.some((event) => event.topic === config.RESOURCE_CREATE_TOPIC),
+          true
+        )
+      } finally {
+        helper.postEvent = originalPostEvent
+        if (createdResourceId) {
+          await prisma.resource.deleteMany({
+            where: { id: createdResourceId }
+          })
+        }
+      }
+    })
+
     it('copilot can manage resources without full access flags', async () => {
       const originalRole = await helper.getById('ResourceRole', copilotRoleId)
       await ResourceRoleService.updateResourceRole(user.admin, copilotRoleId, {
@@ -384,6 +447,19 @@ module.exports = describe('Create resource', () => {
         }
       })
     }
+
+    it('test invalid parameters, sendEmail must be boolean', async () => {
+      try {
+        const entity = {
+          ..._.cloneDeep(testBody),
+          sendEmail: 'invalid'
+        }
+        await service.createResource(user.m2m, entity)
+        throw new Error('should not throw error here')
+      } catch (err) {
+        assertValidationError(err, '"sendEmail" must be a boolean')
+      }
+    })
 
     for (const requiredField of requiredFields) {
       it(`test invalid parameters, required field ${requiredField} is missing`, async () => {

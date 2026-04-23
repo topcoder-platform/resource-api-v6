@@ -492,12 +492,16 @@ async function init (currentUser, challengeId, resource, isCreated) {
  * Create resource for a challenge.
  * @param {Object} currentUser the current user
  * @param {Object} resource the resource to be created
+ * @param {Boolean} [resource.sendEmail=true] whether submitter registration should emit
+ * the registration email event
  * @returns {Object} the created resource
  */
 async function createResource (currentUser, resource) {
   try {
     const challengeId = resource.challengeId
     const { memberId, handle, email, challenge, closeRegistration } = await init(currentUser, challengeId, resource, true)
+    const shouldSendRegistrationEmail = resource.sendEmail !== false
+    const resourceData = _.omit(resource, 'sendEmail')
 
     const timelineTemplateId = _.get(challenge, 'timelineTemplateId', null)
 
@@ -507,7 +511,7 @@ async function createResource (currentUser, resource) {
       createdBy: _.toString(memberId),
       createdAt: moment().utc().format(),
       memberHandle: handle
-    }, resource)
+    }, resourceData)
     const createdResource = await prisma.resource.create({
       data: prismaData,
       include: {
@@ -537,7 +541,9 @@ async function createResource (currentUser, resource) {
         logger.warn(`Failed to increment numOfRegistrants for challenge ${challengeId}: ${e}`)
       }
     }
-    if (!_.get(challenge, 'task.isTask', false) && resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID) {
+    if (!_.get(challenge, 'task.isTask', false) &&
+      resource.roleId === config.SUBMITTER_RESOURCE_ROLE_ID &&
+      shouldSendRegistrationEmail) {
       const forumUrl = _.get(challenge, 'discussions[0].url')
       let templateId = config.REGISTRATION_EMAIL.SENDGRID_TEMPLATE_ID
       if (_.isUndefined(forumUrl)) {
@@ -595,13 +601,15 @@ createResource.schema = {
       challengeId: Joi.id(),
       memberId: Joi.string(),
       memberHandle: Joi.string().required(),
-      roleId: Joi.id()
+      roleId: Joi.id(),
+      sendEmail: Joi.boolean().default(true)
     }),
     Joi.object().keys({
       challengeId: Joi.id(),
       memberId: Joi.string().required(),
       memberHandle: Joi.string(),
-      roleId: Joi.id()
+      roleId: Joi.id(),
+      sendEmail: Joi.boolean().default(true)
     })
   )
 }
