@@ -216,6 +216,44 @@ module.exports = describe('Create resource', () => {
       await assertResource(ret.id, ret)
     })
 
+    it('enforces challenge user whitelist for interactive resource creation', async () => {
+      await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+        where: { challengeId: challengeId3 }
+      })
+      await helper.prismaChallenge.challengeUserWhitelist.create({
+        data: {
+          challengeId: challengeId3,
+          userId: user.phead.userId
+        }
+      })
+
+      let createdResourceId
+      try {
+        const blockedEntity = resources.createBody('diazz', submitterRoleId, challengeId3)
+        try {
+          await service.createResource(user.diazz, blockedEntity)
+          throw new Error('should not throw error here')
+        } catch (err) {
+          should.equal(err.name, 'ForbiddenError')
+        }
+
+        const machineEntity = resources.createBody('machinewhitelistuser', submitterRoleId, challengeId3)
+        const ret = await service.createResource(user.m2m, machineEntity)
+        createdResourceId = ret.id
+        should.equal(ret.roleId, machineEntity.roleId)
+        should.equal(ret.memberHandle.toLowerCase(), machineEntity.memberHandle.toLowerCase())
+      } finally {
+        if (createdResourceId) {
+          await prisma.resource.deleteMany({
+            where: { id: createdResourceId }
+          })
+        }
+        await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+          where: { challengeId: challengeId3 }
+        })
+      }
+    })
+
     it('failure - create self obtainable resource for other user by normal user forbidden', async () => {
       const entity = resources.createBody('lunarkid', config.SUBMITTER_RESOURCE_ROLE_ID, challengeId3)
       try {
