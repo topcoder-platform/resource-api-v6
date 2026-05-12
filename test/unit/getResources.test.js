@@ -79,6 +79,24 @@ module.exports = describe('Get resources', () => {
     should.equal(hasReviewerRole, true)
   })
 
+  it('get resources by project manager role', async () => {
+    const result = await service.getResources(user.projectManager, challengeId)
+    should.equal(result.total, 5)
+    for (const record of result.data) {
+      await assertResource(record.id, record)
+      should.exist(record.roleName)
+    }
+  })
+
+  it('get resources by talent manager role', async () => {
+    const result = await service.getResources(user.talentManager, challengeId)
+    should.equal(result.total, 5)
+    for (const record of result.data) {
+      await assertResource(record.id, record)
+      should.exist(record.roleName)
+    }
+  })
+
   it('enforces challenge user whitelist for interactive resource reads', async () => {
     await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
       where: { challengeId }
