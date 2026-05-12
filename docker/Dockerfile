@@ -13,5 +13,6 @@ RUN npm install -g pnpm@10.33.2
 RUN pnpm install --frozen-lockfile
 RUN pnpm lint
 RUN pnpm lint:fix
+RUN chmod +x appStartUp.sh
 
-CMD pnpm start
+CMD [ "./appStartUp.sh" ]
