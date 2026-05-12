@@ -27,6 +27,13 @@ const RESTRICTED_ROLE_NAMES = [
   'checkpoint reviewer',
   'approver'
 ]
+const RESOURCE_MANAGER_ROLE_NAMES = new Set([
+  _.toLower(constants.UserRoles.Manager),
+  'project manager',
+  'topcoder project manager',
+  'talent manager',
+  'topcoder talent manager'
+])
 
 let copilotResourceRoleIdsCache
 let restrictedRoleIdsCache
@@ -73,10 +80,24 @@ async function getRestrictedRoleIds () {
 }
 
 /**
+ * Check whether the current user has a Work manager role that can manage challenge resources.
+ * @param {Object} currentUser the current user
+ * @returns {Boolean} true when the user has a resource manager role
+ */
+function hasResourceManagerRole (currentUser) {
+  return _.some(_.get(currentUser, 'roles', []), role => RESOURCE_MANAGER_ROLE_NAMES.has(_.toLower(role)))
+}
+
+/**
  * Check whether the user can access resources
+ * @param {Object} currentUser the current user
  * @param {Array} resources resources of current user for specified challenge id
  */
-async function checkAccess (currentUserResources) {
+async function checkAccess (currentUser, currentUserResources) {
+  if (hasResourceManagerRole(currentUser)) {
+    return
+  }
+
   const copilotRoleIds = await getCopilotResourceRoleIds()
   const hasCopilotRole = _.some(currentUserResources, r => copilotRoleIds.includes(r.roleId))
   if (hasCopilotRole) {
@@ -166,7 +187,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
         }
       })
       try {
-        await checkAccess(resources)
+        await checkAccess(currentUser, resources)
         hasFullAccess = true
       } catch (e) {
         hasFullAccess = false
@@ -453,7 +474,7 @@ async function init (currentUser, challengeId, resource, isCreated) {
       if (!resourceRole.selfObtainable || _.toString(memberId) !== _.toString(currentUser.userId)) {
         // if user is not creating/deleting a self obtainable resource for itself
         // we need to perform check access first
-        await checkAccess(currentUserResources)
+        await checkAccess(currentUser, currentUserResources)
       }
     }
   }
