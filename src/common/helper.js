@@ -231,28 +231,98 @@ async function getMemberDetailsById (memberId) {
 }
 
 /**
- * Fetch challenge information from the challenge database and optionally from the Challenge API.
- * Uses the Prisma challenge client to ensure the challenge exists before pulling additional details.
+ * Fetch challenge information by challenge id.
+ *
+ * When includeDetails is false, the challenge database is used for a lightweight
+ * existence check and a local NotFoundError is raised if the record is missing.
+ * When includeDetails is true, Challenge API remains authoritative for the full
+ * payload and its error contract, including the 404 response shape exposed by
+ * resource create/delete flows.
  *
  * @param {String} challengeId the challenge id
  * @param {Object} [options] optional parameters
  * @param {Boolean} [options.includeDetails=false] whether to fetch full challenge details from the API
  * @returns {Promise<Object>} the challenge record or detailed Challenge API payload
+ * @throws {NotFoundError} when includeDetails is false and the challenge database record is missing
  */
 async function getChallengeById (challengeId, options = {}) {
   const { includeDetails = false } = options
+
+  if (includeDetails) {
+    const response = await getRequest(`${config.CHALLENGE_API_URL}/${challengeId}`)
+    return _.get(response, 'body', null)
+  }
+
   const challengeRecord = await prismaChallenge.challenge.findUnique({ where: { id: challengeId } })
 
   if (!challengeRecord) {
     throw new errors.NotFoundError(`Challenge ID ${challengeId} not found`)
   }
 
-  if (!includeDetails) {
-    return challengeRecord
+  return challengeRecord
+}
+
+/**
+ * Determine whether challenge whitelist checks apply for a request.
+ * Interactive users, including admins and anonymous callers, must be evaluated;
+ * M2M callers are allowed to bypass this user-facing access control.
+ *
+ * @param {Object} currentUser the user who performs the operation
+ * @returns {Boolean} true when whitelist rules should be applied
+ */
+function shouldApplyChallengeWhitelist (currentUser) {
+  return !_.get(currentUser, 'isMachine', false)
+}
+
+/**
+ * Filter challenge ids by the current challenge user whitelist state.
+ * Challenges with no whitelist rows stay visible. Evaluation failures fail
+ * closed and return an empty list for interactive callers.
+ *
+ * @param {Object} currentUser the user who performs the operation
+ * @param {Array<String>} challengeIds challenge ids to filter
+ * @returns {Promise<Array<String>>} challenge ids visible to the caller
+ */
+async function filterChallengeIdsByWhitelist (currentUser, challengeIds) {
+  const ids = _.uniq((challengeIds || []).map(id => _.toString(id).trim()).filter(Boolean))
+  if (ids.length === 0 || !shouldApplyChallengeWhitelist(currentUser)) {
+    return ids
   }
 
-  const response = await getRequest(`${config.CHALLENGE_API_URL}/${challengeId}`)
-  return _.get(response, 'body', null)
+  const userId = _.toString(_.get(currentUser, 'userId', '')).trim()
+
+  try {
+    const rows = await prismaChallenge.challengeUserWhitelist.findMany({
+      where: { challengeId: { in: ids } },
+      select: { challengeId: true, userId: true }
+    })
+    const restrictedIds = new Set(rows.map(row => row.challengeId))
+    const allowedRestrictedIds = new Set(
+      rows
+        .filter(row => userId && _.toString(row.userId) === userId)
+        .map(row => row.challengeId)
+    )
+
+    return ids.filter(id => !restrictedIds.has(id) || allowedRestrictedIds.has(id))
+  } catch (err) {
+    logger.warn(`filterChallengeIdsByWhitelist failed: ${err.message}`)
+    return []
+  }
+}
+
+/**
+ * Ensure an interactive caller is allowed by the challenge whitelist.
+ *
+ * @param {Object} currentUser the user who performs the operation
+ * @param {String} challengeId the challenge id to evaluate
+ * @returns {Promise<void>}
+ * @throws {ForbiddenError} when the whitelist blocks the caller or evaluation fails
+ */
+async function ensureChallengeWhitelistAccess (currentUser, challengeId) {
+  const visibleIds = await filterChallengeIdsByWhitelist(currentUser, [challengeId])
+  if (!visibleIds.includes(challengeId)) {
+    throw new errors.ForbiddenError(`You don't have access to view this challenge`)
+  }
 }
 
 async function getMemberDetailsByHandleFromV3Members (handle) {
@@ -573,6 +643,9 @@ module.exports = {
   setResHeaders,
   getAllPages,
   checkChallengeGroupAccess,
+  shouldApplyChallengeWhitelist,
+  filterChallengeIdsByWhitelist,
+  ensureChallengeWhitelistAccess,
   checkAgreedTerms,
   postRequest,
   advanceChallengePhase,

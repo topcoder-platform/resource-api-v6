@@ -27,6 +27,13 @@ const RESTRICTED_ROLE_NAMES = [
   'checkpoint reviewer',
   'approver'
 ]
+const RESOURCE_MANAGER_ROLE_NAMES = new Set([
+  _.toLower(constants.UserRoles.Manager),
+  'project manager',
+  'topcoder project manager',
+  'talent manager',
+  'topcoder talent manager'
+])
 
 let copilotResourceRoleIdsCache
 let restrictedRoleIdsCache
@@ -73,10 +80,24 @@ async function getRestrictedRoleIds () {
 }
 
 /**
+ * Check whether the current user has a Work manager role that can manage challenge resources.
+ * @param {Object} currentUser the current user
+ * @returns {Boolean} true when the user has a resource manager role
+ */
+function hasResourceManagerRole (currentUser) {
+  return _.some(_.get(currentUser, 'roles', []), role => RESOURCE_MANAGER_ROLE_NAMES.has(_.toLower(role)))
+}
+
+/**
  * Check whether the user can access resources
+ * @param {Object} currentUser the current user
  * @param {Array} resources resources of current user for specified challenge id
  */
-async function checkAccess (currentUserResources) {
+async function checkAccess (currentUser, currentUserResources) {
+  if (hasResourceManagerRole(currentUser)) {
+    return
+  }
+
   const copilotRoleIds = await getCopilotResourceRoleIds()
   const hasCopilotRole = _.some(currentUserResources, r => copilotRoleIds.includes(r.roleId))
   if (hasCopilotRole) {
@@ -125,6 +146,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
     throw new errors.BadRequestError(`Challenge ID ${challengeId} must be a valid v5 Challenge Id (UUID)`)
   }
   if (challengeId) {
+    await helper.ensureChallengeWhitelistAccess(currentUser, challengeId)
     try {
       // Verify that the challenge exists
       await helper.getChallengeById(challengeId)
@@ -165,7 +187,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
         }
       })
       try {
-        await checkAccess(resources)
+        await checkAccess(currentUser, resources)
         hasFullAccess = true
       } catch (e) {
         hasFullAccess = false
@@ -215,12 +237,10 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
   }
 
   const orderBy = [{ [sortBy]: sortOrder }]
-  const total = await prisma.resource.count(prismaFilter)
+  let total
   const prismaQuery = {
     ...prismaFilter,
     orderBy,
-    skip: (page - 1) * perPage,
-    take: perPage,
     include: {
       resourceRole: {
         select: {
@@ -229,7 +249,23 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
       }
     }
   }
-  let resources = await prisma.resource.findMany(prismaQuery)
+  let resources
+  if (!challengeId && helper.shouldApplyChallengeWhitelist(currentUser)) {
+    const allResources = await prisma.resource.findMany(prismaQuery)
+    const visibleChallengeIds = new Set(
+      await helper.filterChallengeIdsByWhitelist(currentUser, _.map(allResources, 'challengeId'))
+    )
+    resources = allResources.filter(resource => visibleChallengeIds.has(resource.challengeId))
+    total = resources.length
+    resources = resources.slice((page - 1) * perPage, page * perPage)
+  } else {
+    total = await prisma.resource.count(prismaFilter)
+    resources = await prisma.resource.findMany({
+      ...prismaQuery,
+      skip: (page - 1) * perPage,
+      take: perPage
+    })
+  }
   resources = _.map(resources, item => {
     const ret = _.omit(item, 'updatedBy', 'updatedAt', 'createdAt', 'resourceRole')
     ret.created = item.createdAt
@@ -316,6 +352,8 @@ async function getResourceRole (roleId, isCreated) {
  * @returns {Promise<Object>} the resource entities and member information.
  */
 async function init (currentUser, challengeId, resource, isCreated) {
+  await helper.ensureChallengeWhitelistAccess(currentUser, challengeId)
+
   // Verify that the challenge exists
   const challenge = await helper.getChallengeById(challengeId, { includeDetails: true })
 
@@ -436,7 +474,7 @@ async function init (currentUser, challengeId, resource, isCreated) {
       if (!resourceRole.selfObtainable || _.toString(memberId) !== _.toString(currentUser.userId)) {
         // if user is not creating/deleting a self obtainable resource for itself
         // we need to perform check access first
-        await checkAccess(currentUserResources)
+        await checkAccess(currentUser, currentUserResources)
       }
     }
   }
@@ -700,6 +738,7 @@ async function updatePhaseChangeNotifications (currentUser, resourceId, payload)
 
   const isMachineUser = Boolean(currentUser && currentUser.isMachine)
   const isAdminUser = Boolean(currentUser && helper.hasAdminRole(currentUser))
+  await helper.ensureChallengeWhitelistAccess(currentUser, resource.challengeId)
 
   if (!isMachineUser && !isAdminUser) {
     if (!currentUser || _.toString(resource.memberId) !== _.toString(currentUser.userId)) {
@@ -739,9 +778,10 @@ updatePhaseChangeNotifications.schema = {
  * List all challenge ids that given member has access to.
  * @param {Number} memberId the member id
  * @param {Object} criteria the criteria: {resourceRoleId, page, perPage}
+ * @param {Object} currentUser the user who performs the operation
  * @returns {Array} an array of challenge ids represents challenges that given member has access to.
  */
-async function listChallengesByMember (memberId, criteria) {
+async function listChallengesByMember (memberId, criteria, currentUser) {
   const perPage = criteria.perPage || config.DEFAULT_PAGE_SIZE
   const page = criteria.page || 1
 
@@ -753,28 +793,22 @@ async function listChallengesByMember (memberId, criteria) {
   if (criteria.resourceRoleId) {
     prismaFilter.where.AND.push({ roleId: criteria.resourceRoleId })
   }
-  // TODO: total count is total resource count, not distinct challengeId count
-  const total = await prisma.resource.count(prismaFilter)
-
-  let records = []
-  if (criteria.useScroll) {
-    records = await prisma.resource.findMany({
-      ...selectClause,
-      ...prismaFilter
-    })
-  } else {
-    records = await prisma.resource.findMany({
-      ...selectClause,
-      ...prismaFilter,
-      skip: (page - 1) * perPage,
-      take: perPage
-    })
-  }
   // convert to challengeId array and remove duplicated
-  const arr = _.uniq(_.map(records, 'challengeId'))
+  const records = await prisma.resource.findMany({
+    ...selectClause,
+    ...prismaFilter,
+    orderBy: [{ challengeId: 'asc' }]
+  })
+  const visibleChallengeIds = await helper.filterChallengeIdsByWhitelist(
+    currentUser,
+    _.uniq(_.map(records, 'challengeId'))
+  )
+  const arr = criteria.useScroll
+    ? visibleChallengeIds
+    : visibleChallengeIds.slice((page - 1) * perPage, page * perPage)
   return {
     data: arr,
-    total,
+    total: visibleChallengeIds.length,
     page,
     perPage
   }
@@ -787,17 +821,20 @@ listChallengesByMember.schema = {
     page: Joi.page().default(1),
     perPage: Joi.perPage().default(config.DEFAULT_PAGE_SIZE),
     useScroll: Joi.boolean().default(false)
-  }).required()
+  }).required(),
+  currentUser: Joi.any()
 }
 
 /**
  * Get resource count of a challenge.
  * @param {String} challengeId the challenge id
  * @param {String} roleId the role id to filter on
+ * @param {Object} currentUser the user who performs the operation
  * @returns {Object} the search result
  */
-async function getResourceCount (challengeId, roleId) {
+async function getResourceCount (challengeId, roleId, currentUser) {
   logger.debug(`getResourceCount ${JSON.stringify([challengeId, roleId])}`)
+  await helper.ensureChallengeWhitelistAccess(currentUser, challengeId)
   const whereClause = { where: { AND: [] } }
   whereClause.where.AND.push({ challengeId })
   if (roleId) {
@@ -818,7 +855,8 @@ async function getResourceCount (challengeId, roleId) {
 
 getResourceCount.schema = {
   challengeId: Joi.id(),
-  roleId: Joi.optionalId()
+  roleId: Joi.optionalId(),
+  currentUser: Joi.any()
 }
 
 module.exports = {

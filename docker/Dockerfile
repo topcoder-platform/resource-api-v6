@@ -8,9 +8,9 @@ COPY . /resources-api
 # Set working directory for future use
 WORKDIR /resources-api
 
-RUN npm install pnpm -g
+RUN npm install -g pnpm@10.33.2
 # Install the dependencies from package.json
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 RUN pnpm lint
 RUN pnpm lint:fix
 

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "TopCoder Challenge Resources V5 API",
   "main": "app.js",
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
     "start": "node app.js",
     "start:dev": "nodemon app.js",
@@ -60,6 +61,19 @@
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma"
+    ],
+    "ignoredBuiltDependencies": [
+      "@scarf/scarf",
+      "aws-sdk",
+      "core-js",
+      "dtrace-provider"
+    ]
   },
   "engines": {
     "node": ">=18 <23"

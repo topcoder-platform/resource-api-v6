@@ -55,6 +55,26 @@ const user = {
     email: 'email@domain.com.z',
     jti: 'f1e613be-d5b9-4231-baae-ee9f2d227234'
   },
+  projectManager: {
+    roles: [ 'Topcoder User', 'project manager' ],
+    iss: 'https://api.topcoder-dev.com',
+    handle: 'projectmanager',
+    exp: 1561792370,
+    userId: '8123456',
+    iat: 1549791770,
+    email: 'email@domain.com.z',
+    jti: 'f1e613be-d5b9-4231-baae-ee9f2d227234'
+  },
+  talentManager: {
+    roles: [ 'Topcoder User', 'talent manager' ],
+    iss: 'https://api.topcoder-dev.com',
+    handle: 'talentmanager',
+    exp: 1561792370,
+    userId: '8123457',
+    iat: 1549791770,
+    email: 'email@domain.com.z',
+    jti: 'f1e613be-d5b9-4231-baae-ee9f2d227234'
+  },
   lunarkid: {
     roles: [ 'Topcoder User' ],
     iss: 'https://api.topcoder-dev.com',

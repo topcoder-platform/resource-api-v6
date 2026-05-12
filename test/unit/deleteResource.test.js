@@ -6,6 +6,7 @@ const _ = require('lodash')
 const should = require('should')
 const service = require('../../src/services/ResourceService')
 const helper = require('../../src/common/helper')
+const prisma = require('../../src/common/prisma').getClient()
 const { requestBody, user } = require('../common/testData')
 const { assertValidationError, assertError, getRoleIds } = require('../common/testHelper')
 
@@ -116,6 +117,41 @@ module.exports = describe('Delete resource', () => {
     } catch (err) {
       should.equal(err.name, 'ForbiddenError')
       assertError(err, 'Only M2M, admin or user with full access role can perform this action')
+    }
+  })
+
+  it('enforces challenge user whitelist for interactive resource deletion', async () => {
+    await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+      where: { challengeId }
+    })
+    await helper.prismaChallenge.challengeUserWhitelist.create({
+      data: {
+        challengeId,
+        userId: user.phead.userId
+      }
+    })
+
+    try {
+      const entity = resources.createBody('diazz', submitterRoleId, challengeId)
+      try {
+        await service.deleteResource(user.admin, entity)
+        throw new Error('should not throw error here')
+      } catch (err) {
+        should.equal(err.name, 'ForbiddenError')
+      }
+
+      const existing = await prisma.resource.findFirst({
+        where: {
+          challengeId,
+          memberHandle: 'diazz',
+          roleId: submitterRoleId
+        }
+      })
+      should.exist(existing)
+    } finally {
+      await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+        where: { challengeId }
+      })
     }
   })
 

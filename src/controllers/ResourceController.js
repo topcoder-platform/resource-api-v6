@@ -52,7 +52,7 @@ async function updatePhaseChangeNotifications (req, res) {
  * @param {Object} res the response
  */
 async function listChallengesByMember (req, res) {
-  const result = await service.listChallengesByMember(req.params.memberId, req.query)
+  const result = await service.listChallengesByMember(req.params.memberId, req.query, req.authUser)
   helper.setResHeaders(req, res, result)
   res.send(result.data)
 }
@@ -63,7 +63,7 @@ async function listChallengesByMember (req, res) {
  * @param {Object} res the response
  */
 async function getResourceCount (req, res) {
-  const result = await service.getResourceCount(req.query.challengeId, req.query.roleId)
+  const result = await service.getResourceCount(req.query.challengeId, req.query.roleId, req.authUser)
   res.send(result)
 }
 

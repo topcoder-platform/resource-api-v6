@@ -5,9 +5,12 @@
 const should = require('should')
 const { v4: uuid } = require('uuid')
 const service = require('../../src/services/ResourceService')
+const helper = require('../../src/common/helper')
 const prisma = require('../../src/common/prisma').getClient()
 const { user } = require('../common/testData')
 const { assertValidationError, assertError, getRoleIds } = require('../common/testHelper')
+
+const challengeId = 'fe6d0a58-ce7d-4521-8501-b8132b1c0391'
 
 module.exports = describe('Update phase change notifications', () => {
   let submitterRoleId
@@ -80,6 +83,35 @@ module.exports = describe('Update phase change notifications', () => {
 
     const result = await service.updatePhaseChangeNotifications(user.admin, record.id, { phaseChangeNotifications: false })
     should.equal(result.phaseChangeNotifications, false)
+  })
+
+  it('enforces challenge user whitelist for interactive notification updates', async () => {
+    const record = await createResourceForUser(user.diazz, { challengeId })
+    await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+      where: { challengeId }
+    })
+    await helper.prismaChallenge.challengeUserWhitelist.create({
+      data: {
+        challengeId,
+        userId: user.phead.userId
+      }
+    })
+
+    try {
+      try {
+        await service.updatePhaseChangeNotifications(user.admin, record.id, { phaseChangeNotifications: false })
+        throw new Error('should not throw error here')
+      } catch (err) {
+        should.equal(err.name, 'ForbiddenError')
+      }
+
+      const updated = await service.updatePhaseChangeNotifications(user.m2m, record.id, { phaseChangeNotifications: false })
+      should.equal(updated.phaseChangeNotifications, false)
+    } finally {
+      await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+        where: { challengeId }
+      })
+    }
   })
 
   it('allows machine-to-machine tokens with update scope to update any resource', async () => {

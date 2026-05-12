@@ -4,6 +4,7 @@
 
 const should = require('should')
 const service = require('../../src/services/ResourceService')
+const helper = require('../../src/common/helper')
 const { assertValidationError, getRoleIds } = require('../common/testHelper')
 
 const challengeId1 = 'fe6d0a58-ce7d-4521-8501-b8132b1c0391'
@@ -34,6 +35,51 @@ module.exports = describe('List challenges by member', () => {
     should.equal(ret.data.includes(challengeId1), true)
     should.equal(ret.data.includes(challengeId2), true)
     should.equal(ret.data.includes(challengeId3), true)
+  })
+
+  it('filters member challenge lists by challenge user whitelist', async () => {
+    await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+      where: { challengeId: challengeId2 }
+    })
+    await helper.prismaChallenge.challengeUserWhitelist.create({
+      data: {
+        challengeId: challengeId2,
+        userId: 'allowed-user'
+      }
+    })
+
+    try {
+      const blocked = await service.listChallengesByMember(
+        '151743',
+        {},
+        { userId: 'blocked-user', roles: ['administrator'] }
+      )
+      should.equal(blocked.data.length, 2)
+      should.equal(blocked.data.includes(challengeId1), true)
+      should.equal(blocked.data.includes(challengeId2), false)
+      should.equal(blocked.data.includes(challengeId3), true)
+
+      const blockedSecondPage = await service.listChallengesByMember(
+        '151743',
+        { page: 2, perPage: 1 },
+        { userId: 'blocked-user', roles: ['administrator'] }
+      )
+      should.equal(blockedSecondPage.total, 2)
+      should.equal(blockedSecondPage.data.length, 1)
+      should.equal(blockedSecondPage.data[0], challengeId3)
+
+      const allowed = await service.listChallengesByMember(
+        '151743',
+        {},
+        { userId: 'allowed-user', roles: ['administrator'] }
+      )
+      should.equal(allowed.data.length, 3)
+      should.equal(allowed.data.includes(challengeId2), true)
+    } finally {
+      await helper.prismaChallenge.challengeUserWhitelist.deleteMany({
+        where: { challengeId: challengeId2 }
+      })
+    }
   })
 
   it('get challenges ghostar can access with filter 1', async () => {
