@@ -5,7 +5,7 @@ generator client {
 generator externalClient {
   provider      = "prisma-client-js"
   output        = "../packages/resources-prisma-client"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -56,6 +56,8 @@ model Resource {
   @@index([memberId, roleId], map: "resource-memberIdRoleId-index")
   @@index([roleId], map: "resource-roleId-index")
   @@index([memberId, challengeId], map: "resource-memberIdChallengeId-index")
+  @@index([createdAt(sort: Desc), memberId], map: "idx_resource_created_member")
+  @@index([createdAt(sort: Desc)], map: "idx_resource_created_at")
 }
 
 model ResourceRolePhaseDependency {

@@ -36,11 +36,11 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.19.2
+ * Prisma Client JS version: 6.19.1
  * Query Engine version: c2990dca591cba766e3b7ef5d9e8a84796e47ab7
  */
 Prisma.prismaVersion = {
-  client: "6.19.2",
+  client: "6.19.1",
   engine: "c2990dca591cba766e3b7ef5d9e8a84796e47ab7"
 }
 
@@ -166,7 +166,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/packages/resources-prisma-client",
+      "value": "/home/vasea/work/topcoder/resource-api-v6/packages/resources-prisma-client",
       "fromEnvVar": null
     },
     "config": {
@@ -175,23 +175,27 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "debian-openssl-3.0.x",
         "native": true
       },
       {
         "fromEnvVar": null,
         "value": "debian-openssl-3.0.x"
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/himaniraghav/Desktop/Topcoder Workspace/resource-api-v6/prisma/schema.prisma",
+    "sourceFilePath": "/home/vasea/work/topcoder/resource-api-v6/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
     "rootEnvPath": null
   },
   "relativePath": "../../prisma",
-  "clientVersion": "6.19.2",
+  "clientVersion": "6.19.1",
   "engineVersion": "c2990dca591cba766e3b7ef5d9e8a84796e47ab7",
   "datasourceNames": [
     "db"
@@ -206,8 +210,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n}\n\ngenerator externalClient {\n  provider      = \"prisma-client-js\"\n  output        = \"../packages/resources-prisma-client\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel ResourceRole {\n  id              String    @id @default(uuid())\n  name            String\n  nameLower       String\n  fullReadAccess  Boolean\n  fullWriteAccess Boolean\n  isActive        Boolean\n  selfObtainable  Boolean\n  legacyId        Int?\n  createdAt       DateTime  @default(now())\n  createdBy       String\n  updatedAt       DateTime? @updatedAt\n  updatedBy       String?\n\n  resources                     Resource[]\n  resourceRolePhaseDependencies ResourceRolePhaseDependency[]\n\n  // Indexes for faster search\n  @@index([nameLower], map: \"resourcerole-nameLower-index\")\n  @@index([isActive], map: \"resourcerole-isActive-index\")\n  @@index([isActive, selfObtainable], map: \"resourcerole-isActiveSelfObtainable-index\")\n}\n\nmodel Resource {\n  id                       String    @id @default(uuid())\n  challengeId              String\n  memberId                 String\n  memberHandle             String\n  roleId                   String\n  legacyId                 Int?\n  phaseChangeNotifications Boolean?  @default(true)\n  createdAt                DateTime  @default(now())\n  createdBy                String\n  updatedAt                DateTime? @updatedAt\n  updatedBy                String?\n\n  resourceRole ResourceRole @relation(fields: [roleId], references: [id])\n\n  // Indexes for faster searches\n  @@index([challengeId, memberId], map: \"resource-challengeIdMemberId-index\")\n  @@index([memberId, roleId], map: \"resource-memberIdRoleId-index\")\n  @@index([roleId], map: \"resource-roleId-index\")\n  @@index([memberId, challengeId], map: \"resource-memberIdChallengeId-index\")\n}\n\nmodel ResourceRolePhaseDependency {\n  id             String       @id @default(uuid())\n  phaseId        String\n  resourceRoleId String\n  phaseState     Boolean\n  createdAt      DateTime     @default(now())\n  createdBy      String\n  updatedAt      DateTime?    @updatedAt\n  updatedBy      String?\n  resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])\n\n  @@unique([phaseId, resourceRoleId], map: \"resourcerolephase-phaseId-resourceRoleId-unique\")\n  @@index([resourceRoleId], map: \"resourcerolephasedependency-resourceRoleId-index\")\n}\n",
-  "inlineSchemaHash": "28fa5851254b0ab742e4d96de1bb36f04367fa646912d6020d359326eaea3ca2",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n}\n\ngenerator externalClient {\n  provider      = \"prisma-client-js\"\n  output        = \"../packages/resources-prisma-client\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel ResourceRole {\n  id              String    @id @default(uuid())\n  name            String\n  nameLower       String\n  fullReadAccess  Boolean\n  fullWriteAccess Boolean\n  isActive        Boolean\n  selfObtainable  Boolean\n  legacyId        Int?\n  createdAt       DateTime  @default(now())\n  createdBy       String\n  updatedAt       DateTime? @updatedAt\n  updatedBy       String?\n\n  resources                     Resource[]\n  resourceRolePhaseDependencies ResourceRolePhaseDependency[]\n\n  // Indexes for faster search\n  @@index([nameLower], map: \"resourcerole-nameLower-index\")\n  @@index([isActive], map: \"resourcerole-isActive-index\")\n  @@index([isActive, selfObtainable], map: \"resourcerole-isActiveSelfObtainable-index\")\n}\n\nmodel Resource {\n  id                       String    @id @default(uuid())\n  challengeId              String\n  memberId                 String\n  memberHandle             String\n  roleId                   String\n  legacyId                 Int?\n  phaseChangeNotifications Boolean?  @default(true)\n  createdAt                DateTime  @default(now())\n  createdBy                String\n  updatedAt                DateTime? @updatedAt\n  updatedBy                String?\n\n  resourceRole ResourceRole @relation(fields: [roleId], references: [id])\n\n  // Indexes for faster searches\n  @@index([challengeId, memberId], map: \"resource-challengeIdMemberId-index\")\n  @@index([memberId, roleId], map: \"resource-memberIdRoleId-index\")\n  @@index([roleId], map: \"resource-roleId-index\")\n  @@index([memberId, challengeId], map: \"resource-memberIdChallengeId-index\")\n  @@index([createdAt(sort: Desc), memberId], map: \"idx_resource_created_member\")\n  @@index([createdAt(sort: Desc)], map: \"idx_resource_created_at\")\n}\n\nmodel ResourceRolePhaseDependency {\n  id             String       @id @default(uuid())\n  phaseId        String\n  resourceRoleId String\n  phaseState     Boolean\n  createdAt      DateTime     @default(now())\n  createdBy      String\n  updatedAt      DateTime?    @updatedAt\n  updatedBy      String?\n  resourceRole   ResourceRole @relation(fields: [resourceRoleId], references: [id])\n\n  @@unique([phaseId, resourceRoleId], map: \"resourcerolephase-phaseId-resourceRoleId-unique\")\n  @@index([resourceRoleId], map: \"resourcerolephasedependency-resourceRoleId-index\")\n}\n",
+  "inlineSchemaHash": "9baba408fd3f811e768693e2c20c5e6d04ca969b72492ceead8dcbef23331611",
   "copyEngine": true
 }
 
@@ -246,12 +250,12 @@ exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
 // file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
-path.join(process.cwd(), "packages/resources-prisma-client/libquery_engine-darwin-arm64.dylib.node")
-
-// file annotations for bundling tools to include these files
 path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node");
 path.join(process.cwd(), "packages/resources-prisma-client/libquery_engine-debian-openssl-3.0.x.so.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-linux-musl-openssl-3.0.x.so.node");
+path.join(process.cwd(), "packages/resources-prisma-client/libquery_engine-linux-musl-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "packages/resources-prisma-client/schema.prisma")
