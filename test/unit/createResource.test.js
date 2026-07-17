@@ -260,7 +260,7 @@ module.exports = describe('Create resource', () => {
         await service.createResource(user.diazz, entity)
         throw new Error('should not throw error here')
       } catch (err) {
-        should.equal(err.name, 'BadRequestError')
+        should.equal(err.name, 'ForbiddenError')
         // assertError(err, `Only M2M, admin or user with full access role can perform this action`)
       }
     })
@@ -271,7 +271,7 @@ module.exports = describe('Create resource', () => {
         await service.createResource(user.admin, entity)
         throw new Error('should not throw error here')
       } catch (err) {
-        should.equal(err.name, 'BadRequestError')
+        should.equal(err.name, 'ForbiddenError')
         // assertError(err, 'The user has not yet agreed to the following terms: [term_title]')
       }
     })
@@ -304,7 +304,7 @@ module.exports = describe('Create resource', () => {
     })
 
     it('create submitter resource sends registration email by default', async () => {
-      const entity = resources.createBody('emailnotifyuser', submitterRoleId, challengeId3)
+      const entity = resources.createBody('emailnotifyuser', config.SUBMITTER_RESOURCE_ROLE_ID, challengeId3)
       const postedEvents = []
       const originalPostEvent = helper.postEvent
       let createdResourceId
@@ -333,7 +333,7 @@ module.exports = describe('Create resource', () => {
 
     it('create submitter resource skips registration email when sendEmail is false', async () => {
       const entity = {
-        ...resources.createBody('emailnotifyuser-noemail', submitterRoleId, challengeId3),
+        ...resources.createBody('emailnotifyuser-noemail', config.SUBMITTER_RESOURCE_ROLE_ID, challengeId3),
         sendEmail: false
       }
       const postedEvents = []
@@ -366,7 +366,7 @@ module.exports = describe('Create resource', () => {
       }
     })
 
-    it('copilot can manage resources without full access flags', async () => {
+    it('requires the exact copilot resource-role name for the management bypass', async () => {
       const originalRole = await helper.getById('ResourceRole', copilotRoleId)
       await ResourceRoleService.updateResourceRole(user.admin, copilotRoleId, {
         name: originalRole.name,
@@ -377,18 +377,12 @@ module.exports = describe('Create resource', () => {
       })
 
       const entity = resources.createBody('diazz', reviewerRoleId, challengeId2)
-      let createdResource
       try {
-        createdResource = await service.createResource(user.phead, entity)
-        should.equal(createdResource.roleId, entity.roleId)
-        should.equal(createdResource.memberHandle.toLowerCase(), entity.memberHandle.toLowerCase())
-        await assertResource(createdResource.id, createdResource)
+        await service.createResource(user.phead, entity)
+        throw new Error('should not throw error here')
+      } catch (err) {
+        should.equal(err.name, 'ForbiddenError')
       } finally {
-        if (createdResource && createdResource.id) {
-          await prisma.resource.deleteMany({
-            where: { id: createdResource.id }
-          })
-        }
         await ResourceRoleService.updateResourceRole(user.admin, copilotRoleId, {
           name: originalRole.name,
           fullReadAccess: originalRole.fullReadAccess,

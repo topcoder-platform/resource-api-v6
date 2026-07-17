@@ -1,5 +1,8 @@
 /**
- * This service provides operations of resource role phase dependencies.
+ * Provides resource-role phase dependency searches and mutations.
+ *
+ * Existing validation, audit-field projection, and error-event behavior are
+ * intentionally retained while the implementation is compiled as TypeScript.
  */
 
 const _ = require('lodash')

@@ -1,11 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/@prisma/client-member" // Relative path from *this file* to root node_modules
+  provider     = "prisma-client"
+  output       = "../src/generated/member"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("MEMBER_DB_URL")
 }
 
 enum MemberStatus {
@@ -919,4 +919,3 @@ model memberSkillLevel {
 
   @@id([memberSkillId, skillLevelId])
 }
-

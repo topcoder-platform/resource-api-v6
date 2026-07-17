@@ -1,5 +1,9 @@
 /**
- * Configure all routes for express app
+ * Registers the legacy Express route table and authorization middleware.
+ *
+ * NestJS mounts the completed Express application through ExpressAdapter, so
+ * this module deliberately retains the original middleware ordering and edge
+ * cases for anonymous, human, and machine callers.
  */
 
 const _ = require('lodash')
@@ -7,31 +11,38 @@ const config = require('config')
 const HttpStatus = require('http-status-codes')
 const helper = require('./src/common/helper')
 const errors = require('./src/common/errors')
-// const logger = require('./src/common/logger')
 const routes = require('./src/routes')
 const authenticator = require('tc-core-library-js').middleware.jwtAuthenticator
 
 /**
- * Configure all routes for express app
- * @param app the express app
+ * Configures every public API route on the supplied Express application.
+ *
+ * The compatibility app calls this once during module initialization. It loads
+ * controller functions from the route table, applies JWT, IP-block, role, and
+ * scope checks in their historical order, and installs the custom 404/405
+ * fallback.
+ *
+ * @param app The Express application that NestJS mounts through ExpressAdapter.
+ * @returns Nothing.
+ * @throws If a configured controller method cannot be loaded, or if synchronous
+ * authorization middleware raises an application error.
  */
-module.exports = (app) => {
-  // Load all routes
+function configureRoutes (app: any): void {
   _.each(routes, (verbs, path) => {
     _.each(verbs, (def, verb) => {
       const controllerPath = `./src/controllers/${def.controller}`
-      const method = require(controllerPath)[def.method]; // eslint-disable-line
+      const method = require(controllerPath)[def.method]
       if (!method) {
         throw new Error(`${def.method} is undefined`)
       }
 
-      const actions = []
+      const actions: any[] = []
       actions.push((req, res, next) => {
         req.signature = `${def.controller}#${def.method}`
         next()
       })
 
-      // add Authenticator check if route has auth
+      // Add the authenticator check if the route has auth metadata.
       if (def.auth) {
         actions.push((req, res, next) => {
           let token
@@ -48,7 +59,7 @@ module.exports = (app) => {
         if (def.blockByIp) {
           actions.push((req, res, next) => {
             req.authUser.blockIP = _.find(req.authUser, (value, key) => {
-              return (key.indexOf('blockIP') !== -1)
+              return key.indexOf('blockIP') !== -1
             })
             if (req.authUser.blockIP) {
               throw new errors.ForbiddenError('Access denied')
@@ -61,15 +72,12 @@ module.exports = (app) => {
         if (!def.allowAnonymous) {
           actions.push((req, res, next) => {
             if (req.authUser.isMachine) {
-              // logger.warn(`Request Auth User ${req.authUser} calling ${controllerPath} ${method}`)
-              // M2M
               if (!req.authUser.scopes || !helper.checkIfExists(def.scopes, req.authUser.scopes)) {
                 next(new errors.ForbiddenError('You are not allowed to perform this action!'))
               } else {
                 next()
               }
             } else {
-              // User
               req.authUser.userId = String(req.authUser.userId)
               console.log(req.authUser)
               if (!req.authUser.roles || !helper.checkIfExists(def.access, req.authUser.roles)) {
@@ -87,7 +95,7 @@ module.exports = (app) => {
     })
   })
 
-  // Check if the route is not found or HTTP method is not supported
+  // Preserve the original distinction between unsupported methods and paths.
   app.use('*', (req, res) => {
     const route = routes[req.baseUrl.replace(`/${config.API_VERSION}`, '')]
     if (route) {
@@ -97,3 +105,5 @@ module.exports = (app) => {
     }
   })
 }
+
+module.exports = configureRoutes

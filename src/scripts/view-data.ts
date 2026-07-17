@@ -6,6 +6,13 @@ const _ = require('lodash')
 const logger = require('../common/logger')
 const prisma = require('../common/prisma').getClient()
 
+/**
+ * Prints every record for a supported Prisma model.
+ *
+ * @param {String} modelName Supported logical model name supplied on the CLI.
+ * @returns A promise that resolves after the records have been printed.
+ * @throws Propagates Prisma lookup and database failures.
+ */
 const viewData = async (modelName) => {
   const prismaModel = _.camelCase(modelName)
   const records = await prisma[prismaModel].findMany({})

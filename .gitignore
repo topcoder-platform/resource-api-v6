@@ -66,3 +66,9 @@ typings/
 migrator/data
 
 src/scripts/seed/*.json
+
+# Generated Prisma 7 clients are recreated during installation and builds.
+src/generated/
+
+# NestJS build output.
+dist/
