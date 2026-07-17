@@ -89,5 +89,6 @@ On the `typescript` branch, confirm that:
 - The development workflow builds the nested `docker/Dockerfile` with BuildKit.
 - The Docker build completes frozen pnpm installation, Prisma generation, lint, and Nest compilation.
 - Deployment still uses `APPNAME=resources-api-v6` and the existing DEV/PROD parameter-store paths.
+- Dependency setup removes the image's preconfigured Chrome and Docker APT sources before updating package indexes; both tools are already installed in that image.
 - The Newman job runs on Node 22.13.1 with pnpm 10.33.2 from the repository root.
 - The health wait succeeds before the Postman scripts run and Newman artifacts are retained.

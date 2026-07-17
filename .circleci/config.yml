@@ -15,6 +15,11 @@ defaults: &defaults
 install_dependency: &install_dependency
   name: Installation of build and deployment dependencies.
   command: |
+    # The image already contains Chrome and the Docker client. Their optional
+    # repositories can retain obsolete signing-key configuration and block or
+    # warn during otherwise unrelated package installation.
+    sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+    sudo rm -f /etc/apt/sources.list.d/archive_uri-https_download_docker_com_linux_ubuntu-jammy.list
     sudo apt-get update
     sudo apt-get install --yes jq python3-pip
     sudo pip3 install awscli --upgrade
