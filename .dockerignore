@@ -1,6 +1,13 @@
-node_modules
 .git
-coverage
+.DS_Store
+.env
+.env.*
 .nyc_output
+coverage
+dist
+env.sh
+migrator
+node_modules
 npm-debug.log*
 pnpm-debug.log*
+src/generated

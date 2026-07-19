@@ -1,48 +1,69 @@
 {
   "name": "topcoder-challenge-recources-api",
   "version": "1.0.0",
-  "description": "TopCoder Challenge Resources V5 API",
-  "main": "app.js",
+  "description": "Topcoder Challenge Resources API v6",
+  "main": "dist/main.js",
   "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "start": "node app.js",
-    "start:dev": "nodemon app.js",
-    "postinstall": "npm run prisma:generate",
-    "lint": "standard",
-    "lint:fix": "standard --fix",
-    "prisma:generate:resource": "npx prisma generate --schema=./prisma/schema.prisma",
-    "prisma:generate:member": "npx prisma generate --schema=./prisma/member-schema.prisma",
-    "prisma:generate:challenge": "npx prisma generate --schema=./prisma/challenge-schema.prisma",
-    "prisma:generate": "npm run prisma:generate:resource && npm run prisma:generate:member && npm run prisma:generate:challenge",
-    "seed-tables": "node src/scripts/seed-tables.js",
-    "view-data": "node src/scripts/view-data.js",
-    "mock-api": "NODE_ENV=test node mock/mock-api",
-    "mock-challenge-api": "NODE_ENV=test node mock/mock-challenge-api",
-    "test": "nyc --reporter=html --reporter=text mocha test/unit/test.js --require test/common/prepare.js --timeout 60000 --exit",
-    "test:newman": "NODE_ENV=test node test/postman/newman.js",
-    "test:newman:clear": "node test/postman/clearTestData.js"
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main.js",
+    "postinstall": "pnpm run prisma:generate",
+    "lint": "eslint --no-error-on-unmatched-pattern \"*.ts\" \"src/**/*.ts\" \"prisma/**/*.ts\" \"test/**/*.ts\" \"test/common/prepare.js\" \"test/unit/createResource.test.js\" \"test/unit/getResources.test.js\"",
+    "lint:fix": "pnpm lint --fix",
+    "format": "prettier --write \"*.ts\" \"src/**/*.ts\" \"prisma/**/*.ts\" \"test/**/*.ts\"",
+    "prisma:generate:resource": "prisma generate --schema=./prisma/schema.prisma --generator client",
+    "prisma:generate:member": "prisma generate --schema=./prisma/member-schema.prisma --generator client",
+    "prisma:generate:challenge": "prisma generate --schema=./prisma/challenge-schema.prisma --generator client",
+    "prisma:generate": "pnpm run prisma:generate:resource && pnpm run prisma:generate:member && pnpm run prisma:generate:challenge",
+    "seed-tables": "node dist/src/scripts/seed-tables.js",
+    "view-data": "node dist/src/scripts/view-data.js",
+    "mock-api": "NODE_ENV=test node --require ts-node/register/transpile-only mock/mock-api.js",
+    "mock-challenge-api": "NODE_ENV=test node --require ts-node/register/transpile-only mock/mock-challenge-api.js",
+    "test": "nyc --reporter=html --reporter=text mocha --require ts-node/register/transpile-only test/unit/prisma-adapter.test.ts test/unit/test.js --require test/common/prepare.js --timeout 60000 --exit",
+    "test:adapter": "mocha --require ts-node/register/transpile-only test/unit/prisma-adapter.test.ts",
+    "test:newman": "NODE_ENV=test node --require ts-node/register/transpile-only test/postman/newman.js",
+    "test:newman:clear": "node --require ts-node/register/transpile-only test/postman/clearTestData.js"
   },
   "author": "TCSCODER",
   "license": "none",
   "devDependencies": {
-    "mocha": "^5.2.0",
-    "mocha-prepare": "^0.1.0",
-    "nock": "^10.0.6",
+    "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.7",
+    "@types/pg": "^8.15.5",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "globals": "^15.14.0",
+    "mocha": "^11.7.4",
+    "nock": "^14.0.16",
     "nodemon": "^3.1.9",
-    "nyc": "^14.0.0",
-    "prisma": "^6.5.0",
+    "nyc": "^17.1.0",
+    "prettier": "^3.6.2",
     "should": "^13.2.3",
-    "standard": "^12.0.1",
-    "tc-api-testing-lib": "topcoder-platform/api-automated-testing.git"
+    "tc-api-testing-lib": "https://codeload.github.com/topcoder-platform/api-automated-testing/tar.gz/dd0118f41612764bed344c31affb40b7448949c5",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.20.0"
   },
   "dependencies": {
-    "@prisma/client": "^6.5.0",
+    "@nestjs/common": "^11.1.8",
+    "@nestjs/core": "^11.1.8",
+    "@nestjs/platform-express": "^11.1.8",
+    "@prisma/adapter-pg": "7.4.2",
+    "@prisma/client": "7.4.2",
     "aws-sdk": "^2.466.0",
     "bluebird": "^3.5.1",
     "body-parser": "^1.15.1",
     "config": "^3.0.1",
     "cors": "^2.7.1",
-    "express": "^4.16.4",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
     "express-interceptor": "^1.2.0",
     "get-parameter-names": "^0.3.0",
     "http-json-response": "^1.0.1",
@@ -50,11 +71,15 @@
     "joi": "^14.0.0",
     "lodash": "^4.17.19",
     "moment": "^2.30.1",
-    "superagent": "^8.0.9",
+    "pg": "^8.16.3",
+    "prisma": "7.4.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "superagent": "^10.3.0",
     "swagger-ui-express": "^4.1.3",
     "tc-bus-api-wrapper": "github:topcoder-platform/tc-bus-api-wrapper.git",
-    "tc-core-library-js": "github:topcoder-platform/tc-core-library-js.git#master",
-    "uuid": "^8.3.0",
+    "tc-core-library-js": "https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/1075136355e1e1c4779f2138a30f3ffbd718bfa4",
+    "uuid": "^11.0.3",
     "winston": "^3.2.1",
     "xss": "^1.0.7",
     "yamljs": "^0.3.0"
@@ -63,6 +88,9 @@
     "schema": "./prisma/schema.prisma"
   },
   "pnpm": {
+    "overrides": {
+      "@topcoder-platform/topcoder-bus-api-wrapper>tc-core-library-js": "https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/1075136355e1e1c4779f2138a30f3ffbd718bfa4"
+    },
     "onlyBuiltDependencies": [
       "@prisma/client",
       "@prisma/engines",
@@ -76,16 +104,7 @@
     ]
   },
   "engines": {
-    "node": ">=18 <23"
-  },
-  "standard": {
-    "env": [
-      "mocha"
-    ],
-    "ignore": [
-      "migrator/**",
-      "packages/**"
-    ]
+    "node": "22.x"
   },
   "nyc": {
     "exclude": [
@@ -96,7 +115,6 @@
     ]
   },
   "volta": {
-    "node": "22",
-    "yarn": "1.22.19"
+    "node": "22.13.1"
   }
 }

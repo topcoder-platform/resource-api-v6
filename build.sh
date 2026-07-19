@@ -1,23 +1,10 @@
-#!/bin/bash
-set -eo pipefail
-APP_NAME=$1
-UPDATE_CACHE=""
-FOLDER_NAME="resources-api"
-docker-compose -f docker/docker-compose.yml build $APP_NAME
-docker create --name app $APP_NAME:latest
+#!/usr/bin/env bash
+set -euo pipefail
 
-if [ -d node_modules ]
-then
-  mv yarn.lock old-yarn.lock
-  docker cp app:/$FOLDER_NAME/yarn.lock yarn.lock
-  set +eo pipefail
-  UPDATE_CACHE=$(cmp yarn.lock old-yarn.lock)
-  set -eo pipefail
-else
-  UPDATE_CACHE=1
-fi
+APP_NAME="${1:-resources-api-v6}"
 
-if [ "$UPDATE_CACHE" == 1 ]
-then
-  docker cp app:/$FOLDER_NAME/node_modules .
-fi
+export DOCKER_BUILDKIT=1
+docker build \
+  --file docker/Dockerfile \
+  --tag "${APP_NAME}:latest" \
+  .

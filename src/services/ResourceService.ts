@@ -1,5 +1,9 @@
 /**
- * This service provides operations of resource roles.
+ * Provides resource assignment queries and mutations for Resource API v6.
+ *
+ * The service retains its CommonJS export surface so route handlers and the
+ * existing test suite can invoke and monkeypatch the same functions after the
+ * TypeScript/NestJS runtime migration.
  */
 
 const _ = require('lodash')
@@ -276,7 +280,7 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
 
   const memberIds = _.uniq(_.map(resources, r => _.toNumber(r.memberId)))
 
-  let memberObjects = await helper.getMemberInfoByIdList(memberIds)
+  const memberObjects = await helper.getMemberInfoByIdList(memberIds)
   logger.info(`Retrieved member objects: ${JSON.stringify(memberObjects)}`)
 
   const shouldExposeMemberEmail = Boolean(challengeId) && (isMachineUser || isAdminUser || userHasCopilotRole)
@@ -321,7 +325,7 @@ getResources.schema = {
 /**
  * Get the resource role.
  * @param {String} roleId the resource role id
- * @param {Boolean} isCreated the flag indicate it is create operation.
+ * @param {Boolean} [isCreated=false] whether the operation creates a resource
  */
 async function getResourceRole (roleId, isCreated) {
   try {
@@ -351,7 +355,7 @@ async function getResourceRole (roleId, isCreated) {
  * @param {Boolean} isCreated the flag indicate it is create operation.
  * @returns {Promise<Object>} the resource entities and member information.
  */
-async function init (currentUser, challengeId, resource, isCreated) {
+async function init (currentUser, challengeId, resource, isCreated?: boolean) {
   await helper.ensureChallengeWhitelistAccess(currentUser, challengeId)
 
   // Verify that the challenge exists
@@ -560,7 +564,7 @@ async function createResource (currentUser, resource) {
         }
       }
     })
-    let ret = _.pick(createdResource, payloadFields)
+    const ret = _.pick(createdResource, payloadFields)
     ret.created = createdResource.createdAt
     ret.updated = createdResource.updatedAt
     ret.phaseChangeNotifications = Boolean(createdResource.phaseChangeNotifications)

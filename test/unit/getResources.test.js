@@ -153,12 +153,12 @@ module.exports = describe('Get resources', () => {
     })
 
     try {
-      const blocked = await service.getResources(user.admin, null, null, '151743', null, 2, 1, 'created', 'asc')
+      const blocked = await service.getResources(user.admin, undefined, undefined, '151743', undefined, 2, 1, 'created', 'asc')
       should.equal(blocked.total, 2)
       should.equal(blocked.data.length, 1)
       should.equal(blocked.data[0].challengeId, challengeId3)
 
-      const machine = await service.getResources(user.m2m, null, null, '151743', null, 2, 1, 'created', 'asc')
+      const machine = await service.getResources(user.m2m, undefined, undefined, '151743', undefined, 2, 1, 'created', 'asc')
       should.equal(machine.total, 3)
       should.equal(machine.data.length, 1)
       should.equal(machine.data[0].challengeId, challengeId2)
@@ -182,13 +182,13 @@ module.exports = describe('Get resources', () => {
 
     try {
       try {
-        await service.getResourceCount(challengeId, null, user.admin)
+        await service.getResourceCount(challengeId, undefined, user.admin)
         throw new Error('should not throw error here')
       } catch (err) {
         should.equal(err.name, 'ForbiddenError')
       }
 
-      const machine = await service.getResourceCount(challengeId, null, user.m2m)
+      const machine = await service.getResourceCount(challengeId, undefined, user.m2m)
       should.equal(machine[submitterRoleId], 3)
       should.equal(machine[copilotRoleId], 1)
       should.equal(machine[reviewerRoleId], 1)
@@ -206,8 +206,7 @@ module.exports = describe('Get resources', () => {
     should.equal(result.total, 5)
     for (const record of result.data) {
       await assertResource(record.id, record)
-      should.exist(record.memberEmail)
-      record.memberEmail.should.be.String()
+      should.not.exist(record.memberEmail)
       should.exist(record.roleName)
     }
     // user phead should have two resources

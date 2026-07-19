@@ -11,9 +11,16 @@ const prisma = require('../common/prisma').getClient()
 logger.info('Requesting to seed data to the resources tables...')
 
 const createdBy = 'seed-data'
+const seedDirectory = path.resolve(process.cwd(), 'src', 'scripts', 'seed')
 
+/**
+ * Imports resource-role seed records after applying legacy default fields.
+ *
+ * @returns A promise that resolves after the role batch is inserted.
+ * @throws Propagates Prisma validation or database failures.
+ */
 async function importResourceRole () {
-  let data = require('./seed/ResourceRole.json')
+  let data = require(path.join(seedDirectory, 'ResourceRole.json'))
   data = _.map(data, d => {
     const r = {
       ...d,
@@ -32,8 +39,14 @@ async function importResourceRole () {
   logger.info('Imported ResourceRole data')
 }
 
+/**
+ * Imports resource-role phase-dependency seed records with audit metadata.
+ *
+ * @returns A promise that resolves after the dependency batch is inserted.
+ * @throws Propagates Prisma validation or database failures.
+ */
 async function importResourceRolePhaseDependency () {
-  let data = require('./seed/ResourceRolePhaseDependency.json')
+  let data = require(path.join(seedDirectory, 'ResourceRolePhaseDependency.json'))
   data = _.map(data, d => ({
     ...d,
     createdBy
@@ -42,8 +55,17 @@ async function importResourceRolePhaseDependency () {
   logger.info('Imported ResourceRolePhaseDependency data')
 }
 
+/**
+ * Imports resource seed records and records skipped rows in a local log.
+ *
+ * Individual invalid resource rows are skipped to preserve the historical
+ * best-effort import behavior; batch-level Prisma failures are propagated.
+ *
+ * @returns A promise that resolves after resource and related member data work.
+ * @throws Propagates failures outside the per-resource best-effort insert path.
+ */
 async function importResource () {
-  const logPath = path.join(__dirname, 'seed', 'resource-import-skipped.log')
+  const logPath = path.join(seedDirectory, 'resource-import-skipped.log')
   // truncate existing log
   try { fs.writeFileSync(logPath, '') } catch (e) { /* ignore */ }
 
@@ -52,7 +74,7 @@ async function importResource () {
     fs.appendFileSync(logPath, line)
   }
 
-  const data = require('./seed/Resource.json')
+  const data = require(path.join(seedDirectory, 'Resource.json'))
   const total = data.length
 
   const memberDataMap = {}
@@ -131,6 +153,12 @@ async function importResource () {
   }
 }
 
+/**
+ * Runs every seed import in foreign-key-safe order.
+ *
+ * @returns A promise that resolves when all seed imports complete.
+ * @throws Propagates any import failure to the process-level handler.
+ */
 async function main () {
   await importResourceRole()
   await importResourceRolePhaseDependency()
