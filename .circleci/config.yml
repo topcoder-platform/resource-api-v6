@@ -186,5 +186,5 @@ workflows:
             branches:
               only:
                 - develop
-                - typescript
+                - security_july_2026
                 - dev-circleci
