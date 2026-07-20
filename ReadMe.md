@@ -6,16 +6,16 @@ This service manages challenge resources, resource roles, and resource-role phas
 
 - TypeScript 5 and NestJS 11
 - Prisma 7 with PostgreSQL driver adapters
-- Node.js 22.13.1
-- pnpm 10.33.2
+- Node.js 26.5.0
+- pnpm 11.15.1
 - PostgreSQL for the resources, member, and challenge data sources
 
 The exact local Node version is recorded in `.nvmrc`. Run `nvm use` after entering this project directory and before running pnpm or Node commands.
 
 ## Prerequisites
 
-- Node.js 22.13.1 through nvm
-- pnpm 10.33.2
+- Node.js 26.5.0 through nvm
+- pnpm 11.15.1
 - PostgreSQL databases accessible through the existing database URLs
 - Docker with BuildKit when building the production image
 
@@ -38,7 +38,7 @@ Useful commands are:
 - `pnpm build` compiles the TypeScript application.
 - `pnpm lint` checks TypeScript source and tests.
 - `pnpm prisma:generate` regenerates the three internal clients.
-- `pnpm exec prisma migrate deploy` applies the existing resources migration history.
+- `./node_modules/.bin/prisma migrate deploy` applies the existing resources migration history without requiring a global pnpm installation.
 - `pnpm seed-tables` seeds resource tables.
 - `pnpm view-data <ModelName>` displays resource data.
 - `pnpm run mock-challenge-api` starts the challenge mock on port 4000.
@@ -119,7 +119,7 @@ export CHALLENGE_DB_URL="postgresql://user:password@localhost:5732/challengedb"
 Apply the checked-in resources migrations and build the application:
 
 ```bash
-pnpm exec prisma migrate deploy
+./node_modules/.bin/prisma migrate deploy
 pnpm build
 pnpm start
 ```
@@ -128,17 +128,17 @@ pnpm start
 
 This upgrade is designed for existing databases. The SQL files and migration lock under `prisma/migrations` are the deployment history and must remain unchanged. Do not reset the database, run `prisma migrate dev`, generate a new migration for this conversion, or use `prisma db push` against a deployed environment.
 
-The production entrypoint runs `pnpm exec prisma migrate deploy` before starting `dist/main.js`. This applies only pending migrations from the unchanged history and does not recreate the schema.
+The production entrypoint runs `./node_modules/.bin/prisma migrate deploy` before starting `dist/main.js`. This applies only pending migrations from the unchanged history and does not recreate the schema.
 
 ## Docker
 
-Build the Node 22 production image with:
+Build the Node 26 production image with:
 
 ```bash
 ./build.sh resources-api-v6
 ```
 
-The multi-stage build performs a frozen pnpm install, Prisma generation through `postinstall`, lint, and TypeScript compilation. The runtime image contains the compiled application, production dependencies, Prisma CLI and configuration, unchanged migrations, Swagger documentation, the three generated internal clients, and the committed external client. It runs as the non-root `node` user.
+The multi-stage build performs a frozen pnpm install, Prisma generation through `postinstall`, lint, and TypeScript compilation. The runtime image contains the compiled application, production dependencies, Prisma CLI and configuration, unchanged migrations, Swagger documentation, the three generated internal clients, and the committed external client. Build-only npm and pnpm tooling is removed from the runtime image, which runs as the non-root `node` user.
 
 Runtime configuration continues to be injected through the existing environment variables. The default configuration is included in the image; local `env.sh` files remain excluded.
 
@@ -159,6 +159,6 @@ pnpm run test:newman
 pnpm run test:newman:clear
 ```
 
-CircleCI performs the Docker build and deployment using the existing `APPNAME`, `DEPLOY_ENV`, and parameter-store paths. The automated-test workflow uses Node 22.13.1, pnpm 10.33.2, and the same deployment environment names.
+CircleCI performs the Docker build and deployment using the existing `APPNAME`, `DEPLOY_ENV`, and parameter-store paths. The automated-test workflow uses Node 26.5.0, pnpm 11.15.1, and the same deployment environment names.
 
 See `Verification.md` for the regression checklist.

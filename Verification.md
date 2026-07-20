@@ -1,6 +1,6 @@
 # Resource API v6 verification
 
-Use this checklist to verify the TypeScript, NestJS, Prisma 7, and Node 22 conversion without changing the service's external behavior.
+Use this checklist to verify the TypeScript, NestJS, Prisma 7, and Node 26 runtime without changing the service's external behavior.
 
 ## Static verification
 
@@ -36,7 +36,7 @@ Build the same image used by CircleCI:
 ./build.sh resources-api-v6
 ```
 
-Run it with the existing deployment variables and confirm the logs show migration deployment before `resource-api-v6` starts. The container must run on Node 22.13.1, start `dist/main.js`, and answer:
+Run it with the existing deployment variables and confirm the logs show migration deployment before `resource-api-v6` starts. The container must run on Node 26.5.0, start `dist/main.js`, and answer:
 
 ```text
 GET /v6/resources/health
@@ -90,5 +90,5 @@ On the `typescript` branch, confirm that:
 - The Docker build completes frozen pnpm installation, Prisma generation, lint, and Nest compilation.
 - Deployment still uses `APPNAME=resources-api-v6` and the existing DEV/PROD parameter-store paths.
 - Dependency setup removes the image's preconfigured Chrome and Docker APT sources before updating package indexes; both tools are already installed in that image.
-- The Newman job runs on Node 22.13.1 with pnpm 10.33.2 from the repository root.
+- The Newman job runs on Node 26.5.0 with pnpm 11.15.1 from the repository root.
 - The health wait succeeds before the Postman scripts run and Newman artifacts are retained.

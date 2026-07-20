@@ -8,7 +8,7 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
 fi
 
 echo "Database - applying existing migrations."
-pnpm exec prisma migrate deploy
+./node_modules/.bin/prisma migrate deploy
 
 echo "Starting resource-api-v6."
 exec node dist/main.js
