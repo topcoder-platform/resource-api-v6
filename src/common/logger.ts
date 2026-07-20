@@ -146,10 +146,11 @@ logger.decorateWithValidators = function (service) {
       return
     }
     const params = getParams(method)
+    const schema = Joi.compile(method.schema)
     service[name] = async function () {
       const args = Array.prototype.slice.call(arguments)
       const value = _combineObject(params, args)
-      const normalized = Joi.attempt(value, method.schema)
+      const normalized = Joi.attempt(value, schema)
 
       const newArgs = []
       // Joi will normalize values

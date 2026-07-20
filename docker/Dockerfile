@@ -26,6 +26,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN mkdir -p src/scripts/seed \
   && pnpm lint \
+  && pnpm test:logger \
   && pnpm build \
   && pnpm prune --prod
 

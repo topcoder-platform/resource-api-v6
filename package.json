@@ -22,7 +22,8 @@
     "view-data": "node dist/src/scripts/view-data.js",
     "mock-api": "NODE_ENV=test node --require ts-node/register/transpile-only mock/mock-api.js",
     "mock-challenge-api": "NODE_ENV=test node --require ts-node/register/transpile-only mock/mock-challenge-api.js",
-    "test": "nyc --reporter=html --reporter=text mocha --require ts-node/register/transpile-only test/unit/prisma-adapter.test.ts test/unit/test.js --require test/common/prepare.js --timeout 60000 --exit",
+    "test": "nyc --reporter=html --reporter=text mocha --require ts-node/register/transpile-only test/unit/logger.test.ts test/unit/prisma-adapter.test.ts test/unit/test.js --require test/common/prepare.js --timeout 60000 --exit",
+    "test:logger": "mocha --require ts-node/register/transpile-only test/unit/logger.test.ts --timeout 10000",
     "test:adapter": "mocha --require ts-node/register/transpile-only test/unit/prisma-adapter.test.ts",
     "test:newman": "NODE_ENV=test node --require ts-node/register/transpile-only test/postman/newman.js",
     "test:newman:clear": "node --require ts-node/register/transpile-only test/postman/clearTestData.js"
