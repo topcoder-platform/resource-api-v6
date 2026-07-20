@@ -94,7 +94,7 @@ jobs:
 
   Run-Newman-Test:
     docker:
-      - image: cimg/node:22.13.1
+      - image: cimg/node:26.5.0
         environment:
           DEPLOY_ENV: DEV
           LOGICAL_ENV: dev
@@ -110,7 +110,7 @@ jobs:
       - run:
           name: Install pnpm dependencies
           command: |
-            sudo npm install --global pnpm@10.33.2
+            sudo npm install --global pnpm@11.15.1
             pnpm install --frozen-lockfile
             pnpm build
       - save_cache:
@@ -163,7 +163,7 @@ workflows:
             branches:
               only:
                 - develop
-                - typescript
+                - security_july_2026
                 - hotfix/deploy
                 - PM-3458
       - build-prod:
@@ -186,5 +186,4 @@ workflows:
             branches:
               only:
                 - develop
-                - typescript
                 - dev-circleci
