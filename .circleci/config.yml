@@ -163,7 +163,7 @@ workflows:
             branches:
               only:
                 - develop
-                - typescript
+                - security_july_2026
                 - hotfix/deploy
                 - PM-3458
       - build-prod:
@@ -186,5 +186,4 @@ workflows:
             branches:
               only:
                 - develop
-                - security_july_2026
                 - dev-circleci
