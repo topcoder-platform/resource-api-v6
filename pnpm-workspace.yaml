@@ -1,8 +1,22 @@
 overrides:
   '@topcoder-platform/topcoder-bus-api-wrapper>tc-core-library-js': https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/1075136355e1e1c4779f2138a30f3ffbd718bfa4
-  '@hono/node-server@<1.19.13': 1.19.13
+  '@hono/node-server@<2.0.11': 2.0.11
+  'ajv@>=6.0.0 <6.14.0': 6.15.0
   'axios@<1.18.1': 1.18.1
-  'brace-expansion@1.1.12': 1.1.13
+  'body-parser@<1.20.6': 1.20.6
+  'brace-expansion@<1.1.16': 1.1.16
+  'diff@>=6.0.0 <8.0.3': 8.0.3
+  'fast-uri@>=3.0.0 <3.1.4': 3.1.4
+  'flatted@<3.4.2': 3.4.2
+  'handlebars@<4.7.9': 4.7.9
+  'jose@>=3.0.0 <4.15.5': 4.15.5
+  'js-yaml@>=3.0.0 <3.15.0': 3.15.0
+  'lodash@<4.18.1': 4.18.1
+  'node-forge@<1.4.0': 1.4.0
+  'picomatch@<2.3.2': 2.3.2
+  'serialize-javascript@>=5.0.0 <7.0.7': 7.0.7
+  'underscore@<1.13.8': 1.13.8
+  'uuid@<11.1.1': 11.1.1
   'follow-redirects@<1.16.0': 1.16.0
   'form-data@<4.0.6': 4.0.6
   'minimatch@3.1.2': 3.1.4

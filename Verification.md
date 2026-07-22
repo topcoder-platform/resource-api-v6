@@ -91,4 +91,4 @@ On the `typescript` branch, confirm that:
 - Deployment still uses `APPNAME=resources-api-v6` and the existing DEV/PROD parameter-store paths.
 - Dependency setup removes the image's preconfigured Chrome and Docker APT sources before updating package indexes; both tools are already installed in that image.
 - The Newman job runs on Node 26.5.0 with pnpm 11.15.1 from the repository root.
-- The health wait succeeds before the Postman scripts run and Newman artifacts are retained.
+- The health wait succeeds before the Postman scripts run, Newman 6 executes every configured folder, and `newman/reports.html` is retained even though the obsolete shared test library and its unmaintained Request dependency are absent.
