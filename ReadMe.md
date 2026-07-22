@@ -104,7 +104,7 @@ Publishing remains synchronous. A command that emits an event waits for Bus API 
 
 ### Automated-test settings
 
-The existing test-only settings remain supported: `WAIT_TIME`, `MOCK_CHALLENGE_API_PORT`, `MOCK_API_PORT`, `AUTH_V2_URL`, `AUTH_V2_CLIENT_ID`, `AUTH_V3_URL`, the admin/copilot/user credential variables, `AUTOMATED_TESTING_REPORTERS_FORMAT`, and `AUTOMATED_TESTING_NAME_PREFIX`.
+The existing test-only settings remain supported: `WAIT_TIME`, `MOCK_CHALLENGE_API_PORT`, `MOCK_API_PORT`, `AUTH_V2_URL`, `AUTH_V2_CLIENT_ID`, `AUTH_V3_URL`, the administrator, copilot, and user credential variables, `AUTOMATED_TESTING_REPORTERS_FORMAT`, and `AUTOMATED_TESTING_NAME_PREFIX`. The runner exchanges all four token types referenced by the resource collection and its iteration-data fixtures: M2M, administrator, copilot, and user.
 
 ## Local database setup
 
@@ -158,6 +158,8 @@ pnpm run test:newman:clear
 pnpm run test:newman
 pnpm run test:newman:clear
 ```
+
+The Postman entrypoint uses Newman 6 directly and retains the existing token coverage, per-folder execution order, cleanup, and `newman/reports.html` CircleCI artifact. The `html` reporter name selects that local aggregate report; the supported `cli`, `json`, and `junit` reporter names are passed through to Newman.
 
 CircleCI performs the Docker build and deployment using the existing `APPNAME`, `DEPLOY_ENV`, and parameter-store paths. The automated-test workflow uses Node 26.5.0, pnpm 11.15.1, and the same deployment environment names.
 

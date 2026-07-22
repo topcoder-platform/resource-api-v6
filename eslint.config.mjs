@@ -44,6 +44,7 @@ export default tseslint.config(
   {
     files: [
       'test/common/prepare.js',
+      'test/postman/newman.js',
       'test/unit/createResource.test.js',
       'test/unit/getResources.test.js'
     ],
