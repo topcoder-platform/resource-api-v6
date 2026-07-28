@@ -1,5 +1,8 @@
 /**
- * Contains all routes
+ * Declares the compatibility Express routes and their authorization metadata.
+ *
+ * app-routes.ts consumes this table to register the same paths, methods, roles,
+ * scopes, anonymous access, and IP-block behavior as the original service.
  */
 
 const constants = require('../app-constants')

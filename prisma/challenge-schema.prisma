@@ -1,11 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/@prisma/client-challenge" // Relative path from this file to root node_modules
+  provider     = "prisma-client"
+  output       = "../src/generated/challenge"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("CHALLENGE_DB_URL")
 }
 
 model Challenge {

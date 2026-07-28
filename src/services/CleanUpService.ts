@@ -1,5 +1,5 @@
 /**
- * This service provides operations to clean up the environment for running automated tests.
+ * Removes automated-test records from the Resources API database.
  */
 
 const _ = require('lodash')
@@ -8,12 +8,19 @@ const logger = require('../common/logger')
 const prisma = require('../common/prisma').getClient()
 
 /**
- * Clear the postman test data. The main function of this class.
- * @returns {Promise<void>}
+ * Deletes Postman-created roles and their dependent records.
+ *
+ * Records are selected by the existing AUTOMATED_TESTING_NAME_PREFIX setting.
+ * Dependencies and resources are deleted before roles to satisfy relational
+ * constraints. CleanUpController uses this operation for the protected internal
+ * cleanup endpoint.
+ *
+ * @returns A promise that resolves when all matching records have been deleted.
+ * @throws Propagates Prisma query and deletion failures to the HTTP error handler.
  */
-const cleanUpTestData = async () => {
+async function cleanUpTestData (): Promise<void> {
   logger.info('clear the test data from postman test!')
-  let roles = await prisma.resourceRole.findMany({
+  const roles = await prisma.resourceRole.findMany({
     where: {
       name: { startsWith: config.AUTOMATED_TESTING_NAME_PREFIX }
     }

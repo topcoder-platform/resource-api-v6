@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  output       = "../src/generated/resources"
+  moduleFormat = "cjs"
 }
 
 generator externalClient {
@@ -10,7 +12,6 @@ generator externalClient {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model ResourceRole {

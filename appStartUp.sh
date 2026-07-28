@@ -1,10 +1,14 @@
-#!/bin/bash
-set -eo pipefail
+#!/usr/bin/env bash
+set -euo pipefail
 
-export DATABASE_URL=$(echo -e ${DATABASE_URL})
+# Deployment parameters can contain escaped characters when loaded from the
+# parameter store. Preserve the existing normalization before Prisma reads it.
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  export DATABASE_URL="$(printf '%b' "$DATABASE_URL")"
+fi
 
-echo "Database - running migrations."
-npx prisma migrate deploy
+echo "Database - applying existing migrations."
+./node_modules/.bin/prisma migrate deploy
 
 echo "Starting resource-api-v6."
-npm start
+exec node dist/main.js

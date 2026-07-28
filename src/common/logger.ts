@@ -1,5 +1,8 @@
 /**
- * This module contains the winston logger configuration.
+ * Winston logging plus the legacy service validation/logging decorators.
+ *
+ * The logger remains a mutable CommonJS export because tests replace logging
+ * methods and services are decorated in place during module initialization.
  */
 
 const _ = require('lodash')
@@ -9,7 +12,7 @@ const config = require('config')
 const getParams = require('get-parameter-names')
 const { createLogger, format, transports } = require('winston')
 
-const logger = createLogger({
+const logger: any = createLogger({
   level: config.LOG_LEVEL,
   transports: [
     new transports.Console({
@@ -22,9 +25,15 @@ const logger = createLogger({
 })
 
 /**
- * Log error details with signature
- * @param err the error
- * @param signature the signature
+ * Log complete error details, optionally prefixed with an operation signature.
+ *
+ * Each error object is marked as logged so repeated handling does not emit its
+ * stack more than once.
+ *
+ * @param err Error-like object to log.
+ * @param signature Optional operation or request signature.
+ * @returns No value.
+ * @throws Logger transport errors, if a configured transport throws.
  */
 logger.logFullError = (err, signature) => {
   if (!err) {
@@ -41,9 +50,15 @@ logger.logFullError = (err, signature) => {
 }
 
 /**
- * Remove invalid properties from the object and hide long arrays
- * @param {Object} obj the object
- * @returns {Object} the new object with removed properties
+ * Produce a log-safe representation and abbreviate arrays longer than 30
+ * entries.
+ *
+ * Serialization errors preserve the original object, matching legacy logging.
+ *
+ * @param obj Value to sanitize.
+ * @returns A JSON-compatible clone when serialization succeeds, otherwise the
+ * original value.
+ * @throws Does not throw; serialization errors are caught.
  * @private
  */
 const _sanitizeObject = (obj) => {
@@ -60,9 +75,12 @@ const _sanitizeObject = (obj) => {
 }
 
 /**
- * Convert array with arguments to object
- * @param {Array} params the name of parameters
- * @param {Array} arr the array with values
+ * Associate positional arguments with their parameter names.
+ *
+ * @param params Parameter names in declaration order.
+ * @param arr Argument values in call order.
+ * @returns Object keyed by parameter name.
+ * @throws Does not intentionally throw for ordinary arrays.
  * @private
  */
 const _combineObject = (params, arr) => {
@@ -74,8 +92,14 @@ const _combineObject = (params, arr) => {
 }
 
 /**
- * Decorate all functions of a service and log debug information if DEBUG is enabled
- * @param {Object} service the service
+ * Decorate every service function with debug input/output/error logging.
+ *
+ * Decoration is skipped unless `LOG_LEVEL` is exactly `debug`. The supplied
+ * export object is mutated in place.
+ *
+ * @param service Service export object whose functions should be wrapped.
+ * @returns No value; `service` is updated in place.
+ * @throws Errors from parameter introspection or property assignment.
  */
 logger.decorateWithLogging = (service) => {
   if (config.LOG_LEVEL !== 'debug') {
@@ -105,10 +129,16 @@ logger.decorateWithLogging = (service) => {
 }
 
 /**
- * Decorate all functions of a service and validate input values
- * and replace input arguments with sanitized result form Joi
- * Service method must have a `schema` property with Joi schema
- * @param {Object} service the service
+ * Decorate service functions with their attached Joi validation schemas.
+ *
+ * Validated and converted values replace the original positional arguments.
+ * Functions without a `schema` property are left unchanged. The supplied
+ * export object is mutated in place.
+ *
+ * @param service Service export object whose functions should be validated.
+ * @returns No value; `service` is updated in place.
+ * @throws Joi validation errors when a wrapped function is later invoked, or
+ * property-assignment errors during decoration.
  */
 logger.decorateWithValidators = function (service) {
   _.each(service, (method, name) => {
@@ -116,10 +146,11 @@ logger.decorateWithValidators = function (service) {
       return
     }
     const params = getParams(method)
+    const schema = Joi.compile(method.schema)
     service[name] = async function () {
       const args = Array.prototype.slice.call(arguments)
       const value = _combineObject(params, args)
-      const normalized = Joi.attempt(value, method.schema)
+      const normalized = Joi.attempt(value, schema)
 
       const newArgs = []
       // Joi will normalize values
@@ -135,8 +166,11 @@ logger.decorateWithValidators = function (service) {
 }
 
 /**
- * Apply logger and validation decorators
- * @param {Object} service the service to wrap
+ * Apply validation first and debug logging second to a service export object.
+ *
+ * @param service Service export object to decorate in place.
+ * @returns No value.
+ * @throws Errors raised by either decorator during setup.
  */
 logger.buildService = (service) => {
   logger.decorateWithValidators(service)

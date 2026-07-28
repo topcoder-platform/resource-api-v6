@@ -1,5 +1,8 @@
 /**
- * This service provides operations of resource roles.
+ * Provides resource-role searches and mutations for Resource API v6.
+ *
+ * The service keeps its established Joi schemas, response projections, and
+ * Bus API event ordering while being compiled as TypeScript.
  */
 
 const _ = require('lodash')
@@ -41,7 +44,7 @@ async function getResourceRoles (criteria) {
   if (!_.isUndefined(criteria.fullWriteAccess)) {
     prismaFilter.where.AND.push({ fullWriteAccess: criteria.fullWriteAccess })
   }
-  let records = await prisma.resourceRole.findMany(prismaFilter)
+  const records = await prisma.resourceRole.findMany(prismaFilter)
 
   const result = _.map(records, e => _.pick(e, payloadFields))
   return {

@@ -1,4 +1,5 @@
 version: 2.1
+
 parameters:
   run_automatedtesting:
     default: false
@@ -6,13 +7,23 @@ parameters:
   run_basedeployment:
     default: true
     type: boolean
+
 defaults: &defaults
   docker:
-  - image: cimg/python:3.12.2-browsers
+    - image: cimg/python:3.12.2-browsers
+
 install_dependency: &install_dependency
   name: Installation of build and deployment dependencies.
   command: |
-    pip3 install awscli --upgrade
+    # The image already contains Chrome and the Docker client. Their optional
+    # repositories can retain obsolete signing-key configuration and block or
+    # warn during otherwise unrelated package installation.
+    sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+    sudo rm -f /etc/apt/sources.list.d/archive_uri-https_download_docker_com_linux_ubuntu-jammy.list
+    sudo apt-get update
+    sudo apt-get install --yes jq python3-pip
+    sudo pip3 install awscli --upgrade
+
 install_deploysuite: &install_deploysuite
   name: Installation of install_deploysuite.
   command: |
@@ -21,126 +32,158 @@ install_deploysuite: &install_deploysuite
     cp ./../buildscript/buildenv.sh .
     cp ./../buildscript/awsconfiguration.sh .
     cp ./../buildscript/psvar-processor.sh .
-restore_cache_settings_for_build: &restore_cache_settings_for_build
-  key: docker-node-modules-{{ checksum "yarn.lock" }}
-
-save_cache_settings: &save_cache_settings
-  key: docker-node-modules-{{ checksum "yarn.lock" }}
-  paths:
-  - node_modules
 
 finger_print_add: &finger_print_add
-    fingerprints:
-            - SHA256:KJYSvQh9CxkY9yRXxp+Geo6cllnfSiiKAH3LFQ/X9f4
+  fingerprints:
+    - SHA256:KJYSvQh9CxkY9yRXxp+Geo6cllnfSiiKAH3LFQ/X9f4
+
 builddeploy_steps: &builddeploy_steps
-- add_ssh_keys: *finger_print_add 
-- checkout
-- setup_remote_docker
-- run: *install_dependency
-- run: *install_deploysuite
-- restore_cache: *restore_cache_settings_for_build
-- run:
-    name: "Build docker image"
-    command: |
-      ./awsconfiguration.sh ${DEPLOY_ENV}
-      source awsenvconf
-      ./psvar-processor.sh -t appenv -p /config/${APPNAME}/buildvar
-      source buildvar_env
-      rm -f awsenvconf
-      ./build.sh ${APPNAME}  
-- save_cache: *save_cache_settings
-- deploy:
-    name: Running MasterScript.
-    command: "./awsconfiguration.sh $DEPLOY_ENV\nsource awsenvconf\n./psvar-processor.sh -t appenv -p /config/${APPNAME}/deployvar\nsource deployvar_env\n./master_deploy.sh -d ECS -e $DEPLOY_ENV -t latest -j /config/common/global-appvar,/config/${APPNAME}/appvar -i ${APPNAME} -p FARGATE\n#testing code changes\nif [[ true ]]; then\n    ./psvar-processor.sh -t appenv -p /config/common/qa-appvar\n    source qa-appvar_env  \n    curl --request POST \\\n      --url https://circleci.com/api/v2/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pipeline \\\n      --header \"Circle-Token: ${QA_USER_TOKEN}\" \\\n      --header 'content-type: application/json' \\\n      --data '{\"branch\":\"'\"$CIRCLE_BRANCH\"'\",\"parameters\":{\"run_automatedtesting\":true , \"run_basedeployment\": false}}'\nfi  \n      #magic___^_^___line\n      #magic___^_^___line\n"
+  - add_ssh_keys: *finger_print_add
+  - checkout
+  - setup_remote_docker
+  - run: *install_dependency
+  - run: *install_deploysuite
+  - run:
+      name: Build docker image
+      command: |
+        ./awsconfiguration.sh "${DEPLOY_ENV}"
+        source awsenvconf
+        ./psvar-processor.sh -t appenv -p "/config/${APPNAME}/buildvar"
+        source buildvar_env
+        rm -f awsenvconf
+        ./build.sh "${APPNAME}"
+  - deploy:
+      name: Running MasterScript.
+      command: |
+        ./awsconfiguration.sh "$DEPLOY_ENV"
+        source awsenvconf
+        ./psvar-processor.sh -t appenv -p "/config/${APPNAME}/deployvar"
+        source deployvar_env
+        ./master_deploy.sh \
+          -d ECS \
+          -e "$DEPLOY_ENV" \
+          -t latest \
+          -j "/config/common/global-appvar,/config/${APPNAME}/appvar" \
+          -i "$APPNAME" \
+          -p FARGATE
+
+        ./psvar-processor.sh -t appenv -p /config/common/qa-appvar
+        source qa-appvar_env
+        curl --request POST \
+          --url "https://circleci.com/api/v2/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pipeline" \
+          --header "Circle-Token: ${QA_USER_TOKEN}" \
+          --header 'content-type: application/json' \
+          --data '{"branch":"'"$CIRCLE_BRANCH"'","parameters":{"run_automatedtesting":true,"run_basedeployment":false}}'
+
 jobs:
-  # Build & Deploy against development backend
-  "build-dev":
-    !!merge <<: *defaults
+  build-dev:
+    <<: *defaults
     environment:
-      DEPLOY_ENV: "DEV"
-      LOGICAL_ENV: "dev"
-      APPNAME: "resources-api-v6"
+      DEPLOY_ENV: DEV
+      LOGICAL_ENV: dev
+      APPNAME: resources-api-v6
     steps: *builddeploy_steps
 
-  "build-prod":
-    !!merge <<: *defaults
+  build-prod:
+    <<: *defaults
     environment:
-      DEPLOY_ENV: "PROD"
-      LOGICAL_ENV: "prod"
-      APPNAME: "resources-api-v6"
+      DEPLOY_ENV: PROD
+      LOGICAL_ENV: prod
+      APPNAME: resources-api-v6
     steps: *builddeploy_steps
 
-  "Run-Newman-Test":
+  Run-Newman-Test:
     docker:
-    - image: circleci/node:12
-      environment:
-        DEPLOY_ENV: "DEV"
-        LOGICAL_ENV: "dev"
-        APPNAME: "resources-api-v6"
-    - image: tray/dynamodb-local
-      command: "-inMemory -port 7777"
-    - image: elasticsearch:6.8.13
-      environment:
-        discovery.type: "single-node"
+      - image: cimg/node:26.5.0
+        environment:
+          DEPLOY_ENV: DEV
+          LOGICAL_ENV: dev
+          APPNAME: resources-api-v6
     steps:
-    - checkout
-    - setup_remote_docker
-    - run: *install_dependency
-    - run: *install_deploysuite
-    - run:
-        name: 'newman test'
-        command: |
-          ./awsconfiguration.sh $DEPLOY_ENV
-          source awsenvconf
-          ./psvar-processor.sh -t appenv -p /config/resources-api-v6/qaappvar
-          source qaappvar_env
-          ./psvar-processor.sh -t appenv -p /config/common/global-appvar
-          source global-appvar_env
-          npm i
-          cd mock
-          (npm run mock-challenge-api&)
-          (NODE_ENV=test npm start&)
-          npm run test:newman:clear
-          npm run test:newman
-          npm run test:newman:clear
-    - store_artifacts:
-        path: ./newman
+      - checkout
+      - run: *install_dependency
+      - run: *install_deploysuite
+      - restore_cache:
+          keys:
+            - pnpm-store-v1-{{ checksum "pnpm-lock.yaml" }}
+            - pnpm-store-v1-
+      - run:
+          name: Install pnpm dependencies
+          command: |
+            sudo npm install --global pnpm@11.15.1
+            pnpm install --frozen-lockfile
+            pnpm build
+      - save_cache:
+          key: pnpm-store-v1-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.local/share/pnpm/store
+      - run:
+          name: Newman test
+          command: |
+            ./awsconfiguration.sh "$DEPLOY_ENV"
+            source awsenvconf
+            ./psvar-processor.sh -t appenv -p /config/resources-api-v6/qaappvar
+            source qaappvar_env
+            ./psvar-processor.sh -t appenv -p /config/common/global-appvar
+            source global-appvar_env
+
+            pnpm run mock-challenge-api > /tmp/mock-challenge-api.log 2>&1 &
+            mock_pid=$!
+            NODE_ENV=test pnpm start > /tmp/resource-api.log 2>&1 &
+            app_pid=$!
+            trap 'kill "$mock_pid" "$app_pid" 2>/dev/null || true' EXIT
+
+            health_url="http://localhost:${PORT:-3000}/${API_VERSION:-v6}/resources/health"
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent "$health_url" > /dev/null; then
+                break
+              fi
+              if [[ "$attempt" == 30 ]]; then
+                cat /tmp/mock-challenge-api.log
+                cat /tmp/resource-api.log
+                exit 1
+              fi
+              sleep 1
+            done
+
+            pnpm run test:newman:clear
+            pnpm run test:newman
+            pnpm run test:newman:clear
+      - store_artifacts:
+          path: ./newman
 
 workflows:
   version: 2
   build:
     when: << pipeline.parameters.run_basedeployment >>
     jobs:
-    # Development builds are executed on "develop" branch only.
-    - "build-dev":
-        context: org-global
-        filters:
-          branches:
-            only:
-            - develop
-            - hotfix/deploy
-            - PM-3458
-
-    # Production builds are exectuted only on tagged commits to the testing
-    # master branch.
-    - "build-prod":
-        context: org-global
-        filters:
-          branches:
-            only:
-            - master
+      - build-dev:
+          context: org-global
+          filters:
+            branches:
+              only:
+                - develop
+                - security_july_2026
+                - hotfix/deploy
+                - PM-3458
+      - build-prod:
+          context: org-global
+          filters:
+            branches:
+              only:
+                - master
 
   testingflow:
     when: << pipeline.parameters.run_automatedtesting >>
     jobs:
-    - Hold [Performance-Testing]:
-        type: approval
-    - "Run-Newman-Test":
-        context: org-global
-        requires:
-        - Hold [Performance-Testing]
-        filters:
-          branches:
-            only:
-            - develop
-            - dev-circleci
+      - Hold [Performance-Testing]:
+          type: approval
+      - Run-Newman-Test:
+          context: org-global
+          requires:
+            - Hold [Performance-Testing]
+          filters:
+            branches:
+              only:
+                - develop
+                - dev-circleci

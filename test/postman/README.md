@@ -7,6 +7,7 @@
 ## Running the tests locally
 
 - Follow the steps from the [Readme](../../ReadMe.md)
+- The runner requires the configured M2M client plus administrator, copilot, and user credentials. It uses Newman 6 directly and writes the aggregate HTML artifact to `newman/reports.html`.
 
 ## Running the tests on CircleCI
 

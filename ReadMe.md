@@ -1,249 +1,166 @@
-# Topcoder Challenge Resources API
+# Topcoder Challenge Resources API v6
 
-This microservice provides interaction with Challenge Resources.
+This service manages challenge resources, resource roles, and resource-role phase dependencies while preserving the existing v6 HTTP and event contracts.
 
-### Development deployment status
-[![CircleCI](https://circleci.com/gh/topcoder-platform/resources-api/tree/develop.svg?style=svg)](https://circleci.com/gh/topcoder-platform/resources-api/tree/develop)
+## Technology
 
-### Production deployment status
-[![CircleCI](https://circleci.com/gh/topcoder-platform/resources-api/tree/master.svg?style=svg)](https://circleci.com/gh/topcoder-platform/resources-api/tree/master)
+- TypeScript 5 and NestJS 11
+- Prisma 7 with PostgreSQL driver adapters
+- Node.js 26.5.0
+- pnpm 11.15.1
+- PostgreSQL for the resources, member, and challenge data sources
 
-## Swagger definition
--  [Swagger](https://github.com/topcoder-platform/resources-api/blob/develop/docs/swagger.yaml)
-
-## Intended use
-
-- Production API
-
-## Related repos
--  [Challenge API](https://github.com/topcoder-platform/challenge-api)
--  [Frontend App](https://github.com/topcoder-platform/challenge-engine-ui)
+The exact local Node version is recorded in `.nvmrc`. Run `nvm use` after entering this project directory and before running pnpm or Node commands.
 
 ## Prerequisites
--  [NodeJS](https://nodejs.org/en/) (v10)
--  [Docker](https://www.docker.com/)
--  [Docker Compose](https://docs.docker.com/compose/)
 
-## Configuration
+- Node.js 26.5.0 through nvm
+- pnpm 11.15.1
+- PostgreSQL databases accessible through the existing database URLs
+- Docker with BuildKit when building the production image
 
-Configuration for the application is at `config/default.js`.
-The following parameters can be set in config files or in env variables:
-
-- LOG_LEVEL: the log level, default is 'debug'
-- PORT: the server port, default is 3000
-- API_VERSION: the API version, default is v5
-- AUTH_SECRET: The authorization secret used during token verification.
-- VALID_ISSUERS: The valid issuer of tokens, a json array contains valid issuer.
-- AUTH0_URL: Auth0 URL, used to get TC M2M token
-- AUTH0_AUDIENCE: Auth0 audience, used to get TC M2M token
-- TOKEN_CACHE_TIME: Auth0 token cache time, used to get TC M2M token
-- AUTH0_CLIENT_ID: Auth0 client id, used to get TC M2M token
-- AUTH0_CLIENT_SECRET: Auth0 client secret, used to get TC M2M token
-- AUTH0_PROXY_SERVER_URL: Proxy Auth0 URL, used to get TC M2M token
-- TERMS_API_URL: Terms API url, default is 'https://api.topcoder-dev.com/v5/terms'
-- MEMBER_API_URL: Member api url, default is 'https://api.topcoder-dev.com/v3/members'
-- USER_API_URL: User api url, default is 'https://api.topcoder-dev.com/v3/users'
-- CHALLENGE_API_URL: Challenge api url, default is 'http://localhost:4000/v5/challenges'.
-- CHALLENGE_PHASES_API_URL: Challenge phases API URL, default is 'https://api.topcoder-dev.com/v5/challengephases'.
-- SUBMISSIONS_API_URL: Submission API URL, default value is 'https://api.topcoder-dev.com/v5/submissions'
-- SCOPES: The M2M scopes, refer `config/default.js` for more information
-- BUSAPI_URL: the bus api, default value is 'https://api.topcoder-dev.com/v5'
-- KAFKA_ERROR_TOPIC: Kafka error topic, default value is 'common.error.reporting',
-- KAFKA_MESSAGE_ORIGINATOR: the Kafka message originator, default value is 'resources-api'
-- RESOURCE_CREATE_TOPIC: the resource create Kafka topic, default value is 'challenge.action.resource.create',
-- RESOURCE_DELETE_TOPIC: the resource delete Kafka topic, default value is 'challenge.action.resource.delete',
-- RESOURCE_ROLE_CREATE_TOPIC: the resource role create topic, default value is 'challenge.action.resource.role.create',
-- RESOURCE_ROLE_UPDATE_TOPIC: the resource role update topic, default value is 'challenge.action.resource.role.update'
-- AUTOMATED_TESTING_NAME_PREFIX: the role name prefix for every `ResourceRole` record
-
-Configuration for testing is at `config/test.js`, only add such new configurations different from `config/default.js`
-- WAIT_TIME: wait time used in test, default is 6000 or 6 seconds
-- MOCK_CHALLENGE_API_PORT: the mock server port, default is 4000.
-- AUTH_V2_URL: The auth v2 url
-- AUTH_V2_CLIENT_ID: The auth v2 client id
-- AUTH_V3_URL: The auth v3 url
-- ADMIN_CREDENTIALS_USERNAME: The user's username with admin role
-- ADMIN_CREDENTIALS_PASSWORD: The user's password with admin role
-- COPILOT_CREDENTIALS_USERNAME: The user's username with copilot role
-- COPILOT_CREDENTIALS_PASSWORD: The user's password with copilot role
-- USER_CREDENTIALS_USERNAME: The user's username with user role
-- USER_CREDENTIALS_PASSWORD: The user's password with user role
-- AUTOMATED_TESTING_REPORTERS_FORMAT: indicates reporters format. It is an array of the formats. e.g. `['html']` produces html format. `['cli', 'json', 'junit', 'html']` is the full format.
-*For the details of the supported format, please refer to https://www.npmjs.com/package/newman#reporters*.
-
-## Available commands
-- Be sure to set correct value for environment variable `DATABASE_URL` first.
-- Install dependencies `npm install`
-- Run lint `npm run lint`
-- Run lint fix `npm run lint:fix`
-- Create tables `npm run create-tables`
-- Reset tables `npm run drop-tables`
-- Clear all data in db `npm run clear-tables`
-- Create tables for test environment `npm run create-tables:test`
-- Reset tables for test environment `npm run drop-tables:test`
-- Clear and init db `npm run init-db`
-- Start app `npm start`
-- App is running at `http://localhost:3000`
-- Start mock challenge api server for unit tests `npm run mock-challenge-api`
-- Start mock api server for local dev `npm run mock-api`
-- The mock challenge api server is running at `http://localhost:4000`
-- The mock api server is running at `http://localhost:4001`
-- Run the Postman tests `npm run test:newman`
-- Clear the testing data by Postman tests: `npm run test:newman:clear`
-
-## Local Deployment
-### Foreman Setup
-To install foreman follow this [link](https://theforeman.org/manuals/1.24/#3.InstallingForeman)
-
-To know how to use foreman follow this [link](https://theforeman.org/manuals/1.24/#2.Quickstart)
-
-
-### Database Setup
-
-We can use Postgres setup on Docker for testing purpose. Just run `docker-compose up` in `local` folder.
-
-You can also use docker to start it directly.
-```bash
-docker pull postgres:16.8
-
-docker run -d --name resourceapi -p 5532:5432 \
-  -e POSTGRES_USER=johndoe -e POSTGRES_DB=resourceapi \
-  -e POSTGRES_PASSWORD=mypassword \
-  postgres:16.8
-```
-
-After that, please run
-```bash
-export DATABASE_URL="postgresql://johndoe:mypassword@localhost:5532/resourceapi?schema=public&statement_timeout=60000"
-export MEMBER_DB_URL="postgresql://johndoe:mypassword@localhost:5632/memberdb"
-export CHALLENGE_DB_URL="postgresql://johndoe:mypassword@localhost:5732/challengedb"
-```
-
-### Create Tables
-
-1. Make sure Postgres are running as per instructions above.
-2. Make sure you have configured all config parameters. Refer [Configuration](#configuration)
-3. Run `npm run create-tables` to create tables and `npm run seed-tables` to create test data.
-
-### Mock API
-
-This mock service is designed for local development.
-
-You can run mock api with `npm run mock-api`
-
-It will setup local environment for Challenge API, Submission API and Member API.
-
-### Mock Challenge V5 API
-
-This mock service is designed for unit tests.
-
-The `GET /v5/challenges/{id}` is mocked. It is a simple server app, the code is under mock folder.
-You can start the mock server using command `npm run mock-challenge-api`.
-
-### Scripts
-1. Creating tables: `npm run create-tables`
-2. Drop/delete tables: `npm run drop-tables`
-3. Seed/Insert data to tables: `npm run seed-tables`
-4. Initialize database in default environment, it will clear all data: `npm run init-db`
-5. View table data in default environment: `npm run view-data <ModelName>`, ModelName can be `Resource`, `ResourceRole` or `ResourceRolePhaseDependency`
-
-
-## Production deployment
-
-- TBD
-
-## Running tests
-
-### Configuration
-Test configuration is at `config/test.js`. You don't need to change them.
-
-The following test parameters can be set in config file or in env variables:
-
-- WAIT_TIME: wait time
-- MOCK_CHALLENGE_API_PORT: mock challenge api port
-- AUTH_V2_URL: The auth v2 url
-- AUTH_V2_CLIENT_ID: The auth v2 client id
-- AUTH_V3_URL: The auth v3 url
-- ADMIN_CREDENTIALS_USERNAME: The user's username with admin role
-- ADMIN_CREDENTIALS_PASSWORD: The user's password with admin role
-- COPILOT_CREDENTIALS_USERNAME: The user's username with copilot role
-- COPILOT_CREDENTIALS_PASSWORD: The user's password with copilot role
-- USER_CREDENTIALS_USERNAME: The user's username with user role
-- USER_CREDENTIALS_PASSWORD: The user's password with user role
-
-
-### Prepare
-
-- Start Local Postgres.
-- Create Postgres tables and create test dat.
-- Config `DATABASE_URL`
-- Various config parameters should be properly set.
-
-### Running unit tests
-
-#### Setup Database for Tests
-
-The Unit tests will clear all data in db. So it's better to setup db for test environment.
-
-If you are using docker, you can run
-```bash
-docker run -d --name testdb -p 5430:5432 \
-  -e POSTGRES_USER=johndoe -e POSTGRES_DB=testdb \
-  -e POSTGRES_PASSWORD=mypassword \
-  postgres:16.8
-
-export DATABASE_URL="postgresql://johndoe:mypassword@localhost:5430/testdb?schema=public&statement_timeout=60000"
-```
-It will start a Postgres and listens to port `5430`. Technically you can run tests and application at the same time.
-
-Be sure to export `DATABASE_URL` new value before running tests.
-
-
-#### Running unit tests.
-
-To run unit tests and generate coverage report.
+## Installation and commands
 
 ```bash
-npm run test
+nvm use
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm build
+pnpm test
 ```
 
-### Running E2E tests with Postman
+`pnpm install` runs the `postinstall` hook and generates the service's resources, member, and challenge Prisma 7 clients. `pnpm prisma:generate` intentionally generates only those three service clients. The committed `packages/resources-prisma-client` directory remains the existing Prisma 6-compatible external artifact used by sibling services; it is not regenerated as part of this rollout.
 
-#### `Start` the app server and mock API server before running e2e tests. You may need to set the env variables by calling `source env.sh` before calling `NODE_ENV=test npm start`.
+Useful commands are:
 
-- Make sure the db and es are started
+- `pnpm start` starts the compiled application from `dist/main.js`.
+- `pnpm start:dev` starts Nest in watch mode.
+- `pnpm build` compiles the TypeScript application.
+- `pnpm lint` checks TypeScript source and tests.
+- `pnpm prisma:generate` regenerates the three internal clients.
+- `./node_modules/.bin/prisma migrate deploy` applies the existing resources migration history without requiring a global pnpm installation.
+- `pnpm seed-tables` seeds resource tables.
+- `pnpm view-data <ModelName>` displays resource data.
+- `pnpm run mock-challenge-api` starts the challenge mock on port 4000.
+- `pnpm run mock-api` starts the local API mock on port 4001.
+- `pnpm run test:newman` runs the Postman regression suite.
+- `pnpm run test:newman:clear` removes Postman test data.
+
+The API listens on port 3000 by default. Swagger UI is available at `/v6/resources/api-docs`, and the source definition is `docs/swagger.yaml`.
+
+## Configuration compatibility
+
+The TypeScript conversion retains the existing environment-variable names and defaults. No deployment parameter rename is required.
+
+### Application and authentication
+
+- `LOG_LEVEL`, `PORT`, `API_VERSION`, `DEFAULT_PAGE_SIZE`, and `API_BASE_URL`
+- `AUTH_SECRET` and `VALID_ISSUERS`
+- `AUTH0_URL`, `AUTH0_AUDIENCE`, `TOKEN_CACHE_TIME`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, and `AUTH0_PROXY_SERVER_URL`
+- `SCOPE_READ`, `SCOPE_CREATE`, `SCOPE_DELETE`, `SCOPE_UPDATE`, and `SCOPE_ALL`
+- `SUBMITTER_RESOURCE_ROLE_ID`, `REVIEWER_RESOURCE_ROLE_ID`, and `ITERATIVE_REVIEWER_RESOURCE_ROLE_ID`
+
+Defaults remain port `3000`, API version `v6`, and page size `1000`.
+
+### Databases
+
+- `DATABASE_URL` connects to the resources database and is used by `prisma migrate deploy`.
+- `MEMBER_DB_URL` connects the read-only member client.
+- `CHALLENGE_DB_URL` connects the challenge client used for challenge lookups and registrant-count updates.
+- `RESOURCE_SERVICE_PRISMA_TIMEOUT` retains the existing Prisma timeout setting.
+
+All three URLs are required for application behavior that touches their corresponding data source. They remain separate parameters; this upgrade does not introduce replacement URL names.
+
+### Downstream APIs
+
+- `TERMS_API_URL`
+- `MEMBER_API_URL`
+- `USER_API_URL`
+- `CHALLENGE_API_URL`
+- `CHALLENGE_PHASES_API_URL`
+- `SUBMISSIONS_API_URL`
+- `GROUPS_API_URL`
+
+### Bus API and event topics
+
+This service publishes events through the existing Bus API HTTP client. It does not consume Kafka messages, so it does not use `@platformatic/kafka` and requires no Kafka broker configuration.
+
+The retained publishing parameters are:
+
+- `BUSAPI_URL`
+- `KAFKA_ERROR_TOPIC`
+- `KAFKA_MESSAGE_ORIGINATOR`
+- `RESOURCE_CREATE_TOPIC`
+- `RESOURCE_DELETE_TOPIC`
+- `RESOURCE_ROLE_CREATE_TOPIC`
+- `RESOURCE_ROLE_UPDATE_TOPIC`
+- `EMAIL_NOTIFICATIN_TOPIC`
+
+`EMAIL_NOTIFICATIN_TOPIC` intentionally retains its existing spelling for deployment compatibility. The `KAFKA_*` parameter names are also retained even though this service reaches Kafka indirectly through Bus API.
+
+Registration email payloads continue to use `EMAIL_FROM`, `SENDGRID_TEMPLATE_ID`, `SENDGRID_TEMPLATE_ID_NO_FORUM`, `SUBMIT_URL`, `REVIEW_APP_URL`, `HELP_URL`, and `SUPPORT_EMAIL`. `TOPCROWD_CHALLENGE_TEMPLATE_ID` continues to control whether the registration email event is emitted.
+
+Publishing remains synchronous. A command that emits an event waits for Bus API to accept it, preserving the existing endpoint success and failure behavior.
+
+### Automated-test settings
+
+The existing test-only settings remain supported: `WAIT_TIME`, `MOCK_CHALLENGE_API_PORT`, `MOCK_API_PORT`, `AUTH_V2_URL`, `AUTH_V2_CLIENT_ID`, `AUTH_V3_URL`, the administrator, copilot, and user credential variables, `AUTOMATED_TESTING_REPORTERS_FORMAT`, and `AUTOMATED_TESTING_NAME_PREFIX`. The runner exchanges all four token types referenced by the resource collection and its iteration-data fixtures: M2M, administrator, copilot, and user.
+
+## Local database setup
+
+Start or connect to the three existing PostgreSQL databases, then export their URLs without changing the variable names:
+
 ```bash
-  $ cd resources-api
-
-    # NOTE:
-    # if tables and data already exist, please run first
-
-    # $ npm run drop-tables
-
-    # to drop data and tables
-
-    # Then re-initialize the es server and the database.
-
-  $ npm run create-tables
-  $ npm run init-db
+export DATABASE_URL="postgresql://user:password@localhost:5532/resourceapi?schema=resources"
+export MEMBER_DB_URL="postgresql://user:password@localhost:5632/memberdb"
+export CHALLENGE_DB_URL="postgresql://user:password@localhost:5732/challengedb"
 ```
 
-To run postman e2e tests.
+Apply the checked-in resources migrations and build the application:
 
 ```bash
-npm run test:newman
+./node_modules/.bin/prisma migrate deploy
+pnpm build
+pnpm start
 ```
 
-To clear the testing data from postman e2e tests.
+## Prisma migration policy
+
+This upgrade is designed for existing databases. The SQL files and migration lock under `prisma/migrations` are the deployment history and must remain unchanged. Do not reset the database, run `prisma migrate dev`, generate a new migration for this conversion, or use `prisma db push` against a deployed environment.
+
+The production entrypoint runs `./node_modules/.bin/prisma migrate deploy` before starting `dist/main.js`. This applies only pending migrations from the unchanged history and does not recreate the schema.
+
+## Docker
+
+Build the Node 26 production image with:
 
 ```bash
-npm run test:newman:clear
+./build.sh resources-api-v6
 ```
 
-## Running tests in CI
+The multi-stage build performs a frozen pnpm install, Prisma generation through `postinstall`, lint, and TypeScript compilation. The runtime image contains the compiled application, production dependencies, Prisma CLI and configuration, unchanged migrations, Swagger documentation, the three generated internal clients, and the committed external client. Build-only npm and pnpm tooling is removed from the runtime image, which runs as the non-root `node` user.
 
-- TBD
+Runtime configuration continues to be injected through the existing environment variables. The default configuration is included in the image; local `env.sh` files remain excluded.
 
-## Verification
+## Testing
 
-Refer to the verification document `Verification.md`.
+Unit tests require the configured resources, member, and challenge databases as exercised by the relevant test cases:
+
+```bash
+nvm use
+pnpm test
+```
+
+For the Postman suite, build and start the service and challenge mock, then run:
+
+```bash
+pnpm run test:newman:clear
+pnpm run test:newman
+pnpm run test:newman:clear
+```
+
+The Postman entrypoint uses Newman 6 directly and retains the existing token coverage, per-folder execution order, cleanup, and `newman/reports.html` CircleCI artifact. The `html` reporter name selects that local aggregate report; the supported `cli`, `json`, and `junit` reporter names are passed through to Newman.
+
+CircleCI performs the Docker build and deployment using the existing `APPNAME`, `DEPLOY_ENV`, and parameter-store paths. The automated-test workflow uses Node 26.5.0, pnpm 11.15.1, and the same deployment environment names.
+
+See `Verification.md` for the regression checklist.

@@ -1,8 +1,10 @@
 /**
- * This file defines helper methods
+ * Shared application helpers for authorization, HTTP integrations, database
+ * lookups, pagination, validation, and Bus API event publication.
+ *
+ * The CommonJS export surface is retained so existing services and tests can
+ * monkeypatch helpers such as `postEvent` without changing runtime behavior.
  */
-const { PrismaClient } = require('@prisma/client-member')
-const { PrismaClient: ChallengePrismaClient } = require('@prisma/client-challenge')
 
 const _ = require('lodash')
 const config = require('config')
@@ -18,22 +20,32 @@ const busApi = require('tc-bus-api-wrapper')
 const busApiClient = busApi(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME', 'AUTH0_CLIENT_ID',
   'AUTH0_CLIENT_SECRET', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC', 'AUTH0_PROXY_SERVER_URL']))
 
-const prisma = require('./prisma').getClient()
-const prismaMember = new PrismaClient()
-const prismaChallenge = new ChallengePrismaClient()
+const prismaClients = require('./prisma')
+const prisma = prismaClients.getClient()
+const prismaMember = prismaClients.getMemberClient()
+const prismaChallenge = prismaClients.getChallengeClient()
 
 /**
- * Check the error is custom error.
- * @returns {Boolean} true if error is custom error, false otherwise
+ * Determine whether an error is one of the API's custom HTTP errors.
+ *
+ * @param err Error-like value whose name should be checked.
+ * @returns `true` for an error exported by `errors.ts`; otherwise `false`.
+ * @throws Does not throw for an error-like object with a readable name.
  */
 function isCustomError (err) {
   return _.keys(errors).includes(err.name)
 }
 
 /**
- * Send Kafka event message
- * @params {String} topic the topic name
- * @params {Object} payload the payload
+ * Publish an event through the existing Bus API client.
+ *
+ * The established event envelope and field names are intentionally retained.
+ * The Bus API remains responsible for forwarding the message to Kafka.
+ *
+ * @param topic Topic name placed in the event envelope.
+ * @param payload Event payload forwarded without transformation.
+ * @returns A promise that resolves when the Bus API accepts the event.
+ * @throws Authentication, network, or Bus API errors from the wrapper client.
  */
 async function postEvent (topic, payload) {
   logger.info(`Publish event to Kafka topic ${topic}`)
@@ -48,9 +60,14 @@ async function postEvent (topic, payload) {
 }
 
 /**
- * Wrap async function to standard express function
- * @param {Function} fn the async function
- * @returns {Function} the wrapped function
+ * Wrap an asynchronous function as an Express-compatible request handler.
+ *
+ * Promise rejections are forwarded to Express through `next`.
+ *
+ * @param fn Asynchronous request handler to wrap.
+ * @returns An Express-style handler accepting request, response, and `next`.
+ * @throws Synchronous errors raised before `fn` returns a promise are not
+ * intercepted and retain the legacy behavior.
  */
 function wrapExpress (fn) {
   return function (req, res, next) {
@@ -59,9 +76,13 @@ function wrapExpress (fn) {
 }
 
 /**
- * Wrap all functions from object
- * @param obj the object (controller exports)
- * @returns {Object|Array} the wrapped object
+ * Recursively wrap asynchronous functions contained in an export object.
+ *
+ * Objects are updated in place; arrays are returned as mapped copies.
+ *
+ * @param obj Controller export, function, array, or nested object to process.
+ * @returns The processed function, array, or object.
+ * @throws Any error raised while reading or assigning properties on `obj`.
  */
 function autoWrapExpress (obj) {
   if (_.isArray(obj)) {
@@ -80,8 +101,11 @@ function autoWrapExpress (obj) {
 }
 
 /**
- * Check if the user has admin role
- * @param {Object} authUser the user
+ * Check whether an authenticated user has the configured administrator role.
+ *
+ * @param authUser Authentication payload containing an optional roles array.
+ * @returns `true` for a case-insensitive administrator role match.
+ * @throws Does not throw for missing or malformed role arrays.
  */
 function hasAdminRole (authUser) {
   if (!authUser || !Array.isArray(authUser.roles)) {
@@ -96,30 +120,38 @@ function hasAdminRole (authUser) {
 }
 
 /**
- * Get user handle from token
+ * Get the preferred user identifier from an authentication token.
  *
- * @param {Object} authUser request auth user
- * @returns user handle or sub
+ * @param authUser Authenticated user payload.
+ * @returns The user handle when present, otherwise the token subject.
+ * @throws A property-access error when `authUser` is null or undefined.
  */
 function getUserHandleOrSub (authUser) {
   return authUser.handle || authUser.sub
 }
 
 /**
- * Get user id from token
+ * Get the numeric or string user id from an authentication token.
  *
- * @param {Object} authUser request auth user
- * @returns user id
+ * @param authUser Authenticated user payload.
+ * @returns The payload's `userId` value.
+ * @throws A property-access error when `authUser` is null or undefined.
  */
 function getUserIdFromToken (authUser) {
   return authUser.userId
 }
 
 /**
- * Check if exists.
+ * Check whether any requested term exists in a source list.
  *
- * @param {Array} source the array in which to search for the term
- * @param {Array | String} term the term to search
+ * Source entries and array terms are compared case-insensitively. String terms
+ * are split on spaces, retaining the legacy handling of their original case.
+ *
+ * @param source Array in which to search.
+ * @param term A term string or an array of terms.
+ * @returns `true` when at least one term is present; otherwise `false`.
+ * @throws {Error} When `source` is not an array or `term` is neither a string
+ * nor an array.
  */
 function checkIfExists (source, term) {
   let terms
@@ -148,10 +180,13 @@ function checkIfExists (source, term) {
 }
 
 /**
- * Get Data by model id
- * @param {Object} modelName The model name
- * @param {String} id The id value
- * @returns {Promise<void>}
+ * Fetch a resources-database record by its primary id.
+ *
+ * @param modelName Prisma model name in its exported PascalCase form.
+ * @param id Primary id to find.
+ * @returns The matching Prisma record.
+ * @throws {NotFoundError} When the record does not exist.
+ * @throws A Prisma driver error when the lookup fails.
  */
 async function getById (modelName, id) {
   const prismaModel = _.camelCase(modelName)
@@ -163,18 +198,26 @@ async function getById (modelName, id) {
 }
 
 /**
- * Get Member Stats by id llist
- * @param {Array} idList The id list
- * @returns {Promise<[]>}
+ * Fetch member records and maximum ratings for a list of user ids.
+ *
+ * @param idList Member ids accepted by the members Prisma BigInt filter.
+ * @returns Member records with their optional `maxRating` relation.
+ * @throws A Prisma driver error when the members lookup fails.
  */
 async function getMemberInfoByIdList (idList) {
   return prismaMember.member.findMany({ where: { userId: { in: idList } }, include: { maxRating: true } })
 }
 
 /**
- * Get Data by model id
- * @param {String} handle The member handle
- * @returns {Promise<void>}
+ * Resolve member details by handle.
+ *
+ * The members database is attempted first. Any database miss or error retains
+ * the legacy fallback to the configured Members API.
+ *
+ * @param handle Member handle to resolve case-insensitively in the database.
+ * @returns Member id, email, and handle.
+ * @throws {BadRequestError} When neither source contains the member.
+ * @throws Authentication, network, or API errors other than a fallback 404.
  */
 async function getMemberDetailsByHandle (handle) {
   try {
@@ -200,9 +243,15 @@ async function getMemberDetailsByHandle (handle) {
 }
 
 /**
- * Get Data by model id
- * @param {String} memberId The member id
- * @returns {Promise<void>}
+ * Resolve member details by member id.
+ *
+ * The members database is attempted first. Any database miss or error retains
+ * the legacy fallback to the configured Members API.
+ *
+ * @param memberId Member id to resolve, or a falsey value to skip lookup.
+ * @returns Member details, or `null` for a falsey member id.
+ * @throws {BadRequestError} When neither source contains the member.
+ * @throws Authentication, network, or API errors other than a fallback 404.
  */
 async function getMemberDetailsById (memberId) {
   if (!memberId) {
@@ -245,7 +294,7 @@ async function getMemberDetailsById (memberId) {
  * @returns {Promise<Object>} the challenge record or detailed Challenge API payload
  * @throws {NotFoundError} when includeDetails is false and the challenge database record is missing
  */
-async function getChallengeById (challengeId, options = {}) {
+async function getChallengeById (challengeId, options: { includeDetails?: boolean } = {}) {
   const { includeDetails = false } = options
 
   if (includeDetails) {
@@ -269,6 +318,7 @@ async function getChallengeById (challengeId, options = {}) {
  *
  * @param {Object} currentUser the user who performs the operation
  * @returns {Boolean} true when whitelist rules should be applied
+ * @throws Does not throw.
  */
 function shouldApplyChallengeWhitelist (currentUser) {
   return !_.get(currentUser, 'isMachine', false)
@@ -282,6 +332,8 @@ function shouldApplyChallengeWhitelist (currentUser) {
  * @param {Object} currentUser the user who performs the operation
  * @param {Array<String>} challengeIds challenge ids to filter
  * @returns {Promise<Array<String>>} challenge ids visible to the caller
+ * @throws Does not throw for database evaluation failures; those failures are
+ * logged and fail closed with an empty list.
  */
 async function filterChallengeIdsByWhitelist (currentUser, challengeIds) {
   const ids = _.uniq((challengeIds || []).map(id => _.toString(id).trim()).filter(Boolean))
@@ -325,6 +377,14 @@ async function ensureChallengeWhitelistAccess (currentUser, challengeId) {
   }
 }
 
+/**
+ * Resolve member details by handle through the configured Members API.
+ *
+ * @param handle Member handle passed in the request path.
+ * @returns Member id, email, and canonical API handle.
+ * @throws {BadRequestError} When the API returns 404 or no user id.
+ * @throws Authentication, network, and non-404 API errors.
+ */
 async function getMemberDetailsByHandleFromV3Members (handle) {
   let memberId
   let email
@@ -353,9 +413,12 @@ async function getMemberDetailsByHandleFromV3Members (handle) {
 }
 
 /**
- * Get member detail by id from member api
- * @param {String} userId user id
- * @returns member detail
+ * Resolve member details by id through the configured Members API.
+ *
+ * @param userId Member id passed as the API query parameter.
+ * @returns Member id, email, and handle.
+ * @throws {BadRequestError} When the API returns 404 or no user id.
+ * @throws Authentication, network, and non-404 API errors.
  */
 async function getMemberDetailsByIdFromMemberApi (userId) {
   let memberId
@@ -388,10 +451,17 @@ async function getMemberDetailsByIdFromMemberApi (userId) {
 }
 
 /**
- * Update item in database
- * @param {Object} dbItem The database item
- * @param {Object} data The updated data object
- * @returns {Promise<void>}
+ * Update an existing resources-database record and its audit fields.
+ *
+ * The supplied record is mutated before the complete object is passed to
+ * Prisma, matching the established update semantics.
+ *
+ * @param authUser Authenticated user supplying `updatedBy`.
+ * @param modelName Prisma model name in its exported PascalCase form.
+ * @param dbItem Existing Prisma record; mutated in place.
+ * @param data Fields to merge into the existing record.
+ * @returns The updated Prisma record.
+ * @throws A Prisma validation or driver error when the update fails.
  */
 async function update (authUser, modelName, dbItem, data) {
   Object.keys(data).forEach((key) => {
@@ -408,11 +478,14 @@ async function update (authUser, modelName, dbItem, data) {
 }
 
 /**
- * Check duplication of specified model
- * @param {Object} modelName The dynamoose model name
- * @param {Object} queryParams The query parameters object
- * @param {String} errorMessage the error message if duplication exist.
- * @returns {Boolean} true if duplication exist, throws error otherwise.
+ * Reject an operation when matching resources-database records already exist.
+ *
+ * @param modelName Prisma model name in its exported PascalCase form.
+ * @param queryParams Prisma `where` filter used for the count.
+ * @param errorMessage Conflict message used when a duplicate is found.
+ * @returns A promise that resolves with no value when no duplicate exists.
+ * @throws {ConflictError} When at least one matching record exists.
+ * @throws A Prisma driver error when the count fails.
  */
 async function validateDuplicate (modelName, queryParams, errorMessage) {
   const prismaModel = _.camelCase(modelName)
@@ -423,12 +496,14 @@ async function validateDuplicate (modelName, queryParams, errorMessage) {
 }
 
 /**
- * Uses superagent to proxy get request
- * @param {String} url the url
- * @param {Object} query the query parameters, optional
- * @returns {Object} the response
+ * Send an authenticated GET request with the service's M2M token.
+ *
+ * @param url Target URL.
+ * @param query Optional query parameters.
+ * @returns The SuperAgent response.
+ * @throws M2M authentication, network, or HTTP response errors.
  */
-async function getRequest (url, query) {
+async function getRequest (url, query?: any) {
   const m2mToken = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
   logger.debug(`GET ${url} with query ${JSON.stringify(query)}`)
   return request
@@ -440,12 +515,17 @@ async function getRequest (url, query) {
 }
 
 /**
- * Uses superagent to proxy post request
- * @param {String} url the url
- * @param {Object} data the query parameters, optional
- * @returns {Object} the response
+ * Send an authenticated POST request with the service's M2M token.
+ *
+ * Errors are logged to the console and rethrown unchanged to preserve the
+ * existing API integration behavior.
+ *
+ * @param url Target URL.
+ * @param data Optional request body.
+ * @returns The SuperAgent response.
+ * @throws M2M authentication, network, or HTTP response errors.
  */
-async function postRequest (url, data) {
+async function postRequest (url, data?: any) {
   try {
     const m2mToken = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
 
@@ -464,10 +544,12 @@ async function postRequest (url, data) {
 }
 
 /**
- * Get link for a given page.
- * @param {Object} req the HTTP request
- * @param {Number} page the page number
- * @returns {String} link for the page
+ * Build an absolute pagination link while retaining existing query parameters.
+ *
+ * @param req HTTP request containing `path` and `query`.
+ * @param page Page number to place in the link.
+ * @returns Absolute page URL based on `API_BASE_URL`.
+ * @throws A serialization error for unsupported query values.
  */
 function getPageLink (req, page) {
   const q = _.assignIn({}, req.query, { page })
@@ -475,10 +557,13 @@ function getPageLink (req, page) {
 }
 
 /**
- * Set HTTP response headers from result.
- * @param {Object} req the HTTP request
- * @param {Object} res the HTTP response
- * @param {Object} result the operation result
+ * Set pagination and RFC 5988-style Link headers on an HTTP response.
+ *
+ * @param req HTTP request used to generate page links.
+ * @param res HTTP response exposing a `set` method.
+ * @param result Result containing `total`, `page`, and `perPage`.
+ * @returns No value; headers are written to `res`.
+ * @throws Errors from response header assignment or link generation.
  */
 function setResHeaders (req, res, result) {
   const totalPages = Math.ceil(result.total / result.perPage)
@@ -506,12 +591,14 @@ function setResHeaders (req, res, result) {
 }
 
 /**
- * Get all pages from TC API.
- * @param {String} url the url
- * @param {Object} query the query parameters, optional, it should not include page and perPage
- * @returns {Array} the result records
+ * Fetch and concatenate all pages from a Topcoder API endpoint.
+ *
+ * @param url Endpoint URL.
+ * @param query Optional query parameters excluding `page` and `perPage`.
+ * @returns All array records returned before an empty page or reported total.
+ * @throws M2M authentication, network, or HTTP response errors.
  */
-async function getAllPages (url, query) {
+async function getAllPages (url, query?: any) {
   const perPage = 100
   let page = 1
   let result = []
@@ -535,9 +622,11 @@ async function getAllPages (url, query) {
 }
 
 /**
- * Get all user group ids
- * @param {String} userId the user id
- * @returns {Promise<Array>} the user group ids
+ * Fetch all group ids assigned to a member.
+ *
+ * @param userId Member id used by the Groups API.
+ * @returns The Groups API response body.
+ * @throws M2M authentication, network, or Groups API errors.
  */
 async function getUserGroupIds (userId) {
   const url = config.GROUPS_API_URL + `/memberGroups/${userId}`
@@ -546,9 +635,15 @@ async function getUserGroupIds (userId) {
 }
 
 /**
- * Check user has permission on challenge groups. Throw 403 if user is forbidden.
- * @param {Object} authUser auth user
- * @param {Array} groups challenge.groups
+ * Check whether a user may access every group assigned to a challenge.
+ *
+ * Machine users and administrators bypass group lookup. Despite the legacy
+ * comment, this helper returns a boolean and does not itself throw a 403.
+ *
+ * @param authUser Authenticated user payload.
+ * @param groups Challenge group ids.
+ * @returns `true` when access is allowed; otherwise `false`.
+ * @throws M2M authentication, network, or Groups API errors.
  */
 async function checkChallengeGroupAccess (authUser, groups) {
   // allow admin user
@@ -569,9 +664,14 @@ async function checkChallengeGroupAccess (authUser, groups) {
 }
 
 /**
- * Check if the user has agreed to all challenge terms
- * @param {Number} userId the user ID
- * @param {Array<String>} terms an array of term UUIDs to check
+ * Ensure a member has agreed to all terms required for a resource role.
+ *
+ * @param userId Member id supplied to the Terms API.
+ * @param terms Term objects containing ids and role ids.
+ * @returns A promise that resolves with no value when all terms are agreed.
+ * @throws {ForbiddenError} With missing-term metadata when agreements are
+ * incomplete.
+ * @throws M2M authentication, network, or Terms API errors.
  */
 async function checkAgreedTerms (userId, terms) {
   const unAgreedTerms = []
@@ -592,6 +692,20 @@ async function checkAgreedTerms (userId, terms) {
   }
 }
 
+/**
+ * Request a challenge phase transition, retrying failed attempts after five
+ * seconds.
+ *
+ * The initial request plus up to three retries retain the existing behavior.
+ * After the final failed attempt the function resolves with `undefined`.
+ *
+ * @param challengeId Challenge id used in the API path.
+ * @param phase Phase name to transition.
+ * @param operation Transition operation, such as `close`.
+ * @param numAttempts Current one-based attempt number used by recursive retries.
+ * @returns The successful response body, or `undefined` after all failures.
+ * @throws {Error} Immediately when a required argument is missing.
+ */
 async function advanceChallengePhase (challengeId, phase, operation, numAttempts = 1) {
   if (!challengeId || !phase || !operation) {
     throw new Error('Invalid arguments')
