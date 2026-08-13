@@ -3,7 +3,10 @@
  */
 
 const should = require('should')
+const config = require('config')
+const { v4: uuid } = require('uuid')
 const service = require('../../src/services/ResourceService')
+const controller = require('../../src/controllers/ResourceController')
 const helper = require('../../src/common/helper')
 const prisma = require('../../src/common/prisma').getClient()
 const { user } = require('../common/testData')
@@ -220,6 +223,232 @@ module.exports = describe('Get resources', () => {
     should.equal(result.data[0].memberHandle, 'diazz')
     should.not.exist(result.data[0].memberEmail)
     should.exist(result.data[0].roleName)
+  })
+
+  it('intersects an ordinary caller own member and exact role filters', async () => {
+    const ownSubmitter = await service.getResources(
+      user.diazz,
+      challengeId,
+      submitterRoleId,
+      user.diazz.userId
+    )
+    should.equal(ownSubmitter.total, 1)
+    should.equal(ownSubmitter.data.length, 1)
+    should.equal(ownSubmitter.data[0].memberId, user.diazz.userId)
+    should.equal(ownSubmitter.data[0].roleId, submitterRoleId)
+
+    const ownReviewer = await service.getResources(
+      user.diazz,
+      challengeId,
+      reviewerRoleId,
+      user.diazz.userId
+    )
+    should.equal(ownReviewer.total, 0)
+    should.equal(ownReviewer.data.length, 0)
+  })
+
+  it('resolves an ordinary caller own handle before applying the exact role', async () => {
+    const result = await service.getResources(
+      user.diazz,
+      challengeId,
+      reviewerRoleId,
+      undefined,
+      user.diazz.handle
+    )
+
+    should.equal(result.total, 0)
+    should.equal(result.data.length, 0)
+  })
+
+  it('rejects an ordinary caller cross-member filter without expanding visibility', async () => {
+    try {
+      await service.getResources(
+        user.diazz,
+        challengeId,
+        submitterRoleId,
+        user.phead.userId
+      )
+      throw new Error('should not throw error here')
+    } catch (err) {
+      should.equal(err.name, 'ForbiddenError')
+      err.message.should.containEql('You are not allowed to perform this operation!')
+    }
+
+    try {
+      await service.getResources(
+        user.diazz,
+        challengeId,
+        submitterRoleId,
+        undefined,
+        user.phead.handle
+      )
+      throw new Error('should not throw error here')
+    } catch (err) {
+      should.equal(err.name, 'ForbiddenError')
+      err.message.should.containEql('You are not allowed to perform this operation!')
+    }
+  })
+
+  it('applies a global Submitter role filter before count, order, and pagination', async () => {
+    const resourceIds = [uuid(), uuid(), uuid()]
+    await prisma.resource.createMany({
+      data: [
+        {
+          id: resourceIds[0],
+          challengeId,
+          memberId: user.diazz.userId,
+          memberHandle: user.diazz.handle,
+          roleId: config.SUBMITTER_RESOURCE_ROLE_ID,
+          createdAt: new Date('2030-01-01T00:00:00.000Z'),
+          createdBy: 'testdata'
+        },
+        {
+          id: resourceIds[1],
+          challengeId,
+          memberId: '990001',
+          memberHandle: 'pagination-one',
+          roleId: config.SUBMITTER_RESOURCE_ROLE_ID,
+          createdAt: new Date('2030-01-02T00:00:00.000Z'),
+          createdBy: 'testdata'
+        },
+        {
+          id: resourceIds[2],
+          challengeId,
+          memberId: '990002',
+          memberHandle: 'pagination-two',
+          roleId: config.SUBMITTER_RESOURCE_ROLE_ID,
+          createdAt: new Date('2030-01-03T00:00:00.000Z'),
+          createdBy: 'testdata'
+        }
+      ]
+    })
+
+    try {
+      const result = await service.getResources(
+        user.diazz,
+        challengeId,
+        config.SUBMITTER_RESOURCE_ROLE_ID,
+        undefined,
+        undefined,
+        2,
+        1,
+        'created',
+        'asc'
+      )
+
+      should.equal(result.total, 3)
+      should.equal(result.page, 2)
+      should.equal(result.perPage, 1)
+      should.equal(result.data.length, 1)
+      should.equal(result.data[0].id, resourceIds[1])
+      should.equal(result.data[0].roleId, config.SUBMITTER_RESOURCE_ROLE_ID)
+
+      const publicResult = await service.getResources(
+        null,
+        challengeId,
+        config.SUBMITTER_RESOURCE_ROLE_ID,
+        undefined,
+        undefined,
+        2,
+        1,
+        'created',
+        'asc'
+      )
+      should.equal(publicResult.total, 3)
+      should.equal(publicResult.data.length, 1)
+      should.equal(publicResult.data[0].id, resourceIds[1])
+
+      const hiddenRole = await service.getResources(
+        null,
+        challengeId,
+        reviewerRoleId
+      )
+      should.equal(hiddenRole.total, 0)
+      should.equal(hiddenRole.data.length, 0)
+    } finally {
+      await prisma.resource.deleteMany({
+        where: { id: { in: resourceIds } }
+      })
+    }
+  })
+
+  it('combines privileged member and role filters without changing broad access', async () => {
+    const result = await service.getResources(
+      user.admin,
+      challengeId,
+      reviewerRoleId,
+      user.phead.userId
+    )
+
+    should.equal(result.total, 1)
+    should.equal(result.data.length, 1)
+    should.equal(result.data[0].memberId, user.phead.userId)
+    should.equal(result.data[0].roleId, reviewerRoleId)
+  })
+
+  it('forwards exact filters and exposes filtered pagination through response headers', async () => {
+    const originalGetResources = service.getResources
+    const responseHeaders = {}
+    let responseBody
+    let forwardedArguments
+    const req = {
+      authUser: user.diazz,
+      path: '/v6/resources',
+      query: {
+        challengeId,
+        roleId: submitterRoleId,
+        memberId: user.diazz.userId,
+        page: '2',
+        perPage: '1',
+        sortBy: 'created',
+        sortOrder: 'asc'
+      }
+    }
+    const res = {
+      set: (name, value) => {
+        responseHeaders[name] = value
+      },
+      send: (body) => {
+        responseBody = body
+      }
+    }
+
+    service.getResources = async (...args) => {
+      forwardedArguments = args
+      return {
+        data: [{ id: 'filtered-resource' }],
+        total: 3,
+        page: 2,
+        perPage: 1
+      }
+    }
+
+    try {
+      await controller.getResources(req, res)
+    } finally {
+      service.getResources = originalGetResources
+    }
+
+    should.deepEqual(forwardedArguments, [
+      user.diazz,
+      challengeId,
+      submitterRoleId,
+      user.diazz.userId,
+      undefined,
+      '2',
+      '1',
+      'created',
+      'asc'
+    ])
+    should.deepEqual(responseBody, [{ id: 'filtered-resource' }])
+    should.equal(responseHeaders['X-Prev-Page'], 1)
+    should.equal(responseHeaders['X-Next-Page'], 3)
+    should.equal(responseHeaders['X-Page'], 2)
+    should.equal(responseHeaders['X-Per-Page'], 1)
+    should.equal(responseHeaders['X-Total'], 3)
+    should.equal(responseHeaders['X-Total-Pages'], 3)
+    responseHeaders.Link.should.containEql(`roleId=${submitterRoleId}`)
+    responseHeaders.Link.should.containEql(`memberId=${user.diazz.userId}`)
   })
 
   it('get resources using m2m token', async () => {
