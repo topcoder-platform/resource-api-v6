@@ -121,17 +121,29 @@ async function checkAccess (currentUser, currentUserResources) {
 }
 
 /**
- * Get resources with given challenge id.
+ * Get resources that match the requested filters within the caller's visible set.
+ *
+ * Anonymous callers can see only challenge submitters. Ordinary authenticated
+ * callers can see challenge submitters plus their own non-submitter roles;
+ * requesting another member remains forbidden. Administrators, machine users,
+ * and callers with challenge-wide access retain their existing visibility.
+ * Every supplied role or member filter is intersected with that visible set
+ * before count, ordering, and pagination are calculated.
+ *
  * @param {Object} currentUser the current user
  * @param {String} challengeId the challenge id
- * @param {String} roleId the role id to filter on
- * @param {String} memberId the member id
- * @param {String} memberHandle the member handle
+ * @param {String} roleId the exact resource role id to filter on
+ * @param {String} memberId the exact member id to filter on
+ * @param {String} memberHandle the member handle to resolve and filter on
  * @param {Number} page The page number
  * @param {Number} perPage The number of items to list per page
- * @param {Number} sortBy The field that becomes the sorting criteria
- * @param {Number} sortOrder The sort order
- * @returns {Object} the search result
+ * @param {String} sortBy The field that becomes the sorting criteria
+ * @param {String} sortOrder The sort order
+ * @returns {Promise<Object>} the filtered page and its pagination metadata
+ * @throws {BadRequestError} when no supported lookup key is supplied
+ * @throws {ForbiddenError} when an ordinary caller requests another member or
+ *   the caller cannot access the requested challenge
+ * @throws {NotFoundError} when the requested challenge does not exist
  */
 async function getResources (currentUser, challengeId, roleId, memberId, memberHandle, page, perPage, sortBy, sortOrder) {
   page = page || 1
@@ -229,15 +241,18 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
         ] }
       ]
     })
-  } else {
-    if (roleId) {
-      prismaFilter.where.AND.push({ roleId })
-    }
-    if (resolvedMemberId) {
-      prismaFilter.where.AND.push({ memberId: resolvedMemberId })
-    } else if (memberHandle) {
-      prismaFilter.where.AND.push({ memberId: '__no_match__' })
-    }
+  }
+
+  // Query filters always narrow the caller's authorized candidate set. Keeping
+  // these predicates outside the access branches ensures count and pagination
+  // describe the exact role/member result for every caller type.
+  if (roleId) {
+    prismaFilter.where.AND.push({ roleId })
+  }
+  if (resolvedMemberId) {
+    prismaFilter.where.AND.push({ memberId: resolvedMemberId })
+  } else if (memberHandle) {
+    prismaFilter.where.AND.push({ memberId: '__no_match__' })
   }
 
   const orderBy = [{ [sortBy]: sortOrder }]
@@ -312,10 +327,10 @@ async function getResources (currentUser, challengeId, roleId, memberId, memberH
 
 getResources.schema = {
   currentUser: Joi.any(),
-  challengeId: Joi.optionalId(),
-  roleId: Joi.optionalId(),
-  memberId: Joi.string(),
-  memberHandle: Joi.string(),
+  challengeId: Joi.optionalId().description('Challenge UUID used to scope visible resources'),
+  roleId: Joi.optionalId().description('Exact resource-role UUID used to narrow visible resources'),
+  memberId: Joi.string().description('Exact member ID used to narrow visible resources'),
+  memberHandle: Joi.string().description('Member handle resolved to an exact member filter'),
   page: Joi.page().default(1),
   perPage: Joi.perPage().default(config.DEFAULT_PAGE_SIZE),
   sortBy: Joi.string().valid('memberHandle', 'created').default('created'),

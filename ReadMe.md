@@ -48,6 +48,35 @@ Useful commands are:
 
 The API listens on port 3000 by default. Swagger UI is available at `/v6/resources/api-docs`, and the source definition is `docs/swagger.yaml`.
 
+## Resource list filters and visibility
+
+`GET /v6/resources` first establishes the caller's authorized resource set and
+then intersects any supplied `memberId`, `memberHandle`, and exact `roleId`
+filters with that set. These filters are applied before `X-Total`, ordering, and
+pagination are calculated.
+
+- Anonymous challenge reads expose only assignments with the configured
+  Submitter role.
+- Ordinary authenticated members can see challenge Submitters plus their own
+  assignments for other roles. They may restrict by member only when the
+  requested ID or handle resolves to their own account; cross-member requests
+  return `403`.
+- Administrators, machine callers, resource managers, members assigned the
+  challenge's Copilot resource role, and members with another challenge-wide
+  full-access resource retain their existing visibility, with the same exact
+  filters applied to their result candidates.
+
+For a paginated registrant list, send the challenge UUID and canonical
+Submitter role UUID together, for example:
+
+```text
+GET /v6/resources?challengeId=<challenge-uuid>&roleId=<submitter-role-uuid>&page=1&perPage=20
+```
+
+For a signed-in member's registration check, also provide that caller's own
+member ID. The response pagination headers then describe only that exact
+challenge/member/role combination.
+
 ## Configuration compatibility
 
 The TypeScript conversion retains the existing environment-variable names and defaults. No deployment parameter rename is required.
