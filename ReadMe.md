@@ -127,7 +127,7 @@ The retained publishing parameters are:
 
 `EMAIL_NOTIFICATIN_TOPIC` intentionally retains its existing spelling for deployment compatibility. The `KAFKA_*` parameter names are also retained even though this service reaches Kafka indirectly through Bus API.
 
-Registration email payloads continue to use `EMAIL_FROM`, `SENDGRID_TEMPLATE_ID`, `SENDGRID_TEMPLATE_ID_NO_FORUM`, `SUBMIT_URL`, `REVIEW_APP_URL`, `HELP_URL`, and `SUPPORT_EMAIL`. `TOPCROWD_CHALLENGE_TEMPLATE_ID` continues to control whether the registration email event is emitted.
+Registration email payloads continue to use `EMAIL_FROM`, `SENDGRID_TEMPLATE_ID`, `SENDGRID_TEMPLATE_ID_NO_FORUM`, `SUBMIT_URL`, `REVIEW_APP_URL`, `HELP_URL`, and `SUPPORT_URL`. `TOPCROWD_CHALLENGE_TEMPLATE_ID` continues to control whether the registration email event is emitted. The `support` and `supportUrl` template fields point members to the Support App at of `support.topcoder.com`.
 
 Publishing remains synchronous. A command that emits an event waits for Bus API to accept it, preserving the existing endpoint success and failure behavior.
 

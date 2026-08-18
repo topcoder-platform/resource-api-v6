@@ -55,7 +55,7 @@ module.exports = {
     SUBMIT_URL: process.env.SUBMIT_URL || 'https://www.topcoder.com/challenges/:id/submit/',
     REVIEW_APP_URL: process.env.REVIEW_APP_URL || 'https://review.topcoder.com/active-challenges/',
     HELP_URL: process.env.HELP_URL || 'https://help.topcoder.com',
-    SUPPORT_EMAIL: process.env.SUPPORT_EMAIL || 'support@topcoder.com'
+    SUPPORT_URL: process.env.SUPPORT_URL || 'https://support.topcoder.com'
   },
 
   AUTOMATED_TESTING_NAME_PREFIX: process.env.AUTOMATED_TESTING_NAME_PREFIX || 'POSTMANE2E-',
