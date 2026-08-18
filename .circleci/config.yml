@@ -166,6 +166,7 @@ workflows:
                 - security_july_2026
                 - hotfix/deploy
                 - PM-3458
+                - PM-5919
       - build-prod:
           context: org-global
           filters:
