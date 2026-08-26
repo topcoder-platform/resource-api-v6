@@ -627,7 +627,8 @@ async function createResource (currentUser, resource) {
             submitUrl: _.replace(config.REGISTRATION_EMAIL.SUBMIT_URL, ':id', challengeId),
             reviewAppUrl: config.REGISTRATION_EMAIL.REVIEW_APP_URL + challenge.id + '/challenge-details',
             helpUrl: config.REGISTRATION_EMAIL.HELP_URL,
-            support: config.REGISTRATION_EMAIL.SUPPORT_EMAIL
+            support: config.REGISTRATION_EMAIL.SUPPORT_URL,
+            supportUrl: config.REGISTRATION_EMAIL.SUPPORT_URL
           },
           sendgrid_template_id: templateId,
           version: 'v3'
