@@ -460,7 +460,7 @@ async function init (currentUser, challengeId, resource, isCreated?: boolean) {
   }
   // check if the resource is reviewer role and has already made a submission in the challenge
   if (isCreated && (resource.roleId === config.REVIEWER_RESOURCE_ROLE_ID || resource.roleId === config.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID)) {
-    const submissionsRes = await helper.getRequest(`${config.SUBMISSIONS_API_URL}`, { challengeId: challengeId, perPage: 100, memberId: memberId })
+    const submissionsRes = await helper.getRequest('submissions', [], { challengeId: challengeId, perPage: 100, memberId: memberId })
     const submissions = submissionsRes.body
     logger.debug(`Submissions made by member ${memberId} in challenge ${challengeId}: ${JSON.stringify(submissions)}`)
     if (submissions.meta.totalCount !== 0) {

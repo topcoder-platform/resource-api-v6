@@ -25,6 +25,63 @@ const prisma = prismaClients.getClient()
 const prismaMember = prismaClients.getMemberClient()
 const prismaChallenge = prismaClients.getChallengeClient()
 
+const OUTBOUND_APIS = Object.freeze({
+  challengePhases: config.CHALLENGE_PHASES_API_URL,
+  challenges: config.CHALLENGE_API_URL,
+  groups: config.GROUPS_API_URL,
+  members: config.MEMBER_API_URL,
+  resources: `${config.API_BASE_URL}/${config.API_VERSION}/resources`,
+  submissions: config.SUBMISSIONS_API_URL,
+  terms: config.TERMS_API_URL
+})
+
+/**
+ * Build a URL for one explicitly allowlisted Topcoder API.
+ *
+ * Callers select a server-controlled API name and supply path components
+ * separately. Each component is encoded only after URL delimiters, control
+ * characters, traversal markers, and pre-encoded input have been rejected.
+ * This keeps untrusted resource ids and handles out of the target origin and
+ * prevents a request from escaping the configured API's base path.
+ *
+ * @param apiName Allowlisted API name from the internal `OUTBOUND_APIS` map.
+ * @param pathSegments Optional unencoded path components to append.
+ * @returns A canonical absolute HTTP(S) URL for the selected API.
+ * @throws {Error} When the API name is unknown, its configured base URL is
+ * unsafe, or a path component can change URL structure.
+ */
+function buildOutboundApiUrl (apiName, pathSegments: any[] = []) {
+  if (!Object.prototype.hasOwnProperty.call(OUTBOUND_APIS, apiName)) {
+    throw new Error(`Unknown outbound API: ${apiName}`)
+  }
+  if (!Array.isArray(pathSegments)) {
+    throw new Error('Outbound API path segments must be an array')
+  }
+
+  const target = new URL(OUTBOUND_APIS[apiName])
+  if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password || target.search || target.hash) {
+    throw new Error(`Unsafe configured URL for outbound API: ${apiName}`)
+  }
+
+  target.pathname = target.pathname.replace(/\/+$/, '')
+  for (const value of pathSegments) {
+    if (!['string', 'number', 'bigint'].includes(typeof value)) {
+      throw new Error('Outbound API path segments must be strings or numbers')
+    }
+    const segment = String(value)
+    const hasControlCharacter = Array.from(segment).some((character) => {
+      const codePoint = character.codePointAt(0)
+      return codePoint <= 31 || codePoint === 127
+    })
+    if (!segment || segment === '.' || segment === '..' || /[/\\?#%]/.test(segment) || hasControlCharacter) {
+      throw new Error('Unsafe outbound API path segment')
+    }
+    target.pathname += `/${encodeURIComponent(segment)}`
+  }
+
+  return target.toString()
+}
+
 /**
  * Determine whether an error is one of the API's custom HTTP errors.
  *
@@ -298,7 +355,7 @@ async function getChallengeById (challengeId, options: { includeDetails?: boolea
   const { includeDetails = false } = options
 
   if (includeDetails) {
-    const response = await getRequest(`${config.CHALLENGE_API_URL}/${challengeId}`)
+    const response = await getRequest('challenges', [challengeId])
     return _.get(response, 'body', null)
   }
 
@@ -389,7 +446,7 @@ async function getMemberDetailsByHandleFromV3Members (handle) {
   let memberId
   let email
   try {
-    const res = await getRequest(`${config.MEMBER_API_URL}/${handle}`)
+    const res = await getRequest('members', [handle])
     if (_.get(res, 'body.userId')) {
       memberId = String(res.body.userId)
     }
@@ -426,7 +483,7 @@ async function getMemberDetailsByIdFromMemberApi (userId) {
   let handle
   try {
     logger.warn(`getMemberDetailsByIdFromMemberApi ${handle} from v6`)
-    const res = await getRequest(`${config.MEMBER_API_URL}?userId=${userId}`)
+    const res = await getRequest('members', [], { userId })
     if (_.get(res, 'body[0].userId')) {
       memberId = String(res.body[0].userId)
     }
@@ -498,16 +555,22 @@ async function validateDuplicate (modelName, queryParams, errorMessage) {
 /**
  * Send an authenticated GET request with the service's M2M token.
  *
- * @param url Target URL.
+ * The API host and base path come only from the internal allowlist, path
+ * components are structurally validated, and redirects are not followed.
+ *
+ * @param apiName Allowlisted API name.
+ * @param pathSegments Optional unencoded path components.
  * @param query Optional query parameters.
  * @returns The SuperAgent response.
- * @throws M2M authentication, network, or HTTP response errors.
+ * @throws URL validation, M2M authentication, network, or HTTP response errors.
  */
-async function getRequest (url, query?: any) {
+async function getRequest (apiName, pathSegments: any[] = [], query?: any) {
+  const url = buildOutboundApiUrl(apiName, pathSegments)
   const m2mToken = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
   logger.debug(`GET ${url} with query ${JSON.stringify(query)}`)
   return request
     .get(url)
+    .redirects(0)
     .set('Authorization', `Bearer ${m2mToken}`)
     .set('Content-Type', 'application/json')
     .set('Accept', 'application/json')
@@ -517,20 +580,24 @@ async function getRequest (url, query?: any) {
 /**
  * Send an authenticated POST request with the service's M2M token.
  *
- * Errors are logged to the console and rethrown unchanged to preserve the
- * existing API integration behavior.
+ * The API host and base path come only from the internal allowlist, path
+ * components are structurally validated, and redirects are not followed.
+ * Errors are logged and rethrown unchanged to preserve integration behavior.
  *
- * @param url Target URL.
+ * @param apiName Allowlisted API name.
+ * @param pathSegments Optional unencoded path components.
  * @param data Optional request body.
  * @returns The SuperAgent response.
- * @throws M2M authentication, network, or HTTP response errors.
+ * @throws URL validation, M2M authentication, network, or HTTP response errors.
  */
-async function postRequest (url, data?: any) {
+async function postRequest (apiName, pathSegments: any[] = [], data?: any) {
   try {
+    const url = buildOutboundApiUrl(apiName, pathSegments)
     const m2mToken = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
 
     const res = await request
       .post(url)
+      .redirects(0)
       .set('Authorization', `Bearer ${m2mToken}`)
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
@@ -593,18 +660,18 @@ function setResHeaders (req, res, result) {
 /**
  * Fetch and concatenate all pages from a Topcoder API endpoint.
  *
- * @param url Endpoint URL.
+ * @param apiName Allowlisted API name.
  * @param query Optional query parameters excluding `page` and `perPage`.
  * @returns All array records returned before an empty page or reported total.
- * @throws M2M authentication, network, or HTTP response errors.
+ * @throws URL validation, M2M authentication, network, or HTTP response errors.
  */
-async function getAllPages (url, query?: any) {
+async function getAllPages (apiName, query?: any) {
   const perPage = 100
   let page = 1
   let result = []
   for (;;) {
     // get current page data
-    const res = await getRequest(url, _.assignIn({ page, perPage }, query || {}))
+    const res = await getRequest(apiName, [], _.assignIn({ page, perPage }, query || {}))
     if (!_.isArray(res.body) || res.body.length === 0) {
       break
     }
@@ -629,8 +696,7 @@ async function getAllPages (url, query?: any) {
  * @throws M2M authentication, network, or Groups API errors.
  */
 async function getUserGroupIds (userId) {
-  const url = config.GROUPS_API_URL + `/memberGroups/${userId}`
-  const response = await getRequest(url, { uuid: true })
+  const response = await getRequest('groups', ['memberGroups', userId], { uuid: true })
   return response.body
 }
 
@@ -677,7 +743,7 @@ async function checkAgreedTerms (userId, terms) {
   const unAgreedTerms = []
   const missingTerms = []
   for (const term of terms) {
-    const res = await getRequest(`${config.TERMS_API_URL}/${term.id}`, { userId })
+    const res = await getRequest('terms', [term.id], { userId })
     if (!_.get(res, 'body.agreed', false)) {
       unAgreedTerms.push(_.get(res, 'body.title', term))
       missingTerms.push({
@@ -714,7 +780,7 @@ async function advanceChallengePhase (challengeId, phase, operation, numAttempts
   try {
     console.log('Initiating advance phase:', challengeId, phase, operation)
 
-    const response = await postRequest(`${config.CHALLENGE_API_URL}/${challengeId}/advance-phase`, {
+    const response = await postRequest('challenges', [challengeId, 'advance-phase'], {
       phase,
       operation
     })
@@ -751,6 +817,7 @@ module.exports = {
   getById,
   update,
   validateDuplicate,
+  buildOutboundApiUrl,
   getRequest,
   postEvent,
   isCustomError,
