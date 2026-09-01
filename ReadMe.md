@@ -190,6 +190,8 @@ pnpm run test:newman:clear
 
 The Postman entrypoint uses Newman 6 directly and retains the existing token coverage, per-folder execution order, cleanup, and `newman/reports.html` CircleCI artifact. The `html` reporter name selects that local aggregate report; the supported `cli`, `json`, and `junit` reporter names are passed through to Newman.
 
+The exported manual Postman environment intentionally leaves bearer-token values blank. Populate those values only in a local, uncommitted environment before using the collection; never commit live or example JWTs.
+
 CircleCI performs the Docker build and deployment using the existing `APPNAME`, `DEPLOY_ENV`, and parameter-store paths. The automated-test workflow uses Node 26.5.0, pnpm 11.15.1, and the same deployment environment names.
 
 See `Verification.md` for the regression checklist.

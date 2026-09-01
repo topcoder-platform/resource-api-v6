@@ -57,7 +57,7 @@ getDependencies.schema = {
  */
 async function validateDependency (data) {
   // validate phaseId
-  const phases = await helper.getAllPages(config.CHALLENGE_PHASES_API_URL)
+  const phases = await helper.getAllPages('challengePhases')
   if (!_.find(phases, (p) => p.id === data.phaseId)) {
     throw new errors.NotFoundError(`Not found phase id: ${data.phaseId}`)
   }

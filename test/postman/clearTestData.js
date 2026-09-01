@@ -3,7 +3,6 @@
  */
 const logger = require('../../src/common/logger')
 const helper = require('../../src/common/helper')
-const config = require('config')
 
 logger.info('Clear the Postman test data.')
 
@@ -12,7 +11,7 @@ logger.info('Clear the Postman test data.')
  * @returns {Promise<void>}
  */
 const clearTestData = async () => {
-  await helper.postRequest(`${config.API_BASE_URL}/${config.API_VERSION}/resources/internal/jobs/clean`)
+  await helper.postRequest('resources', ['internal', 'jobs', 'clean'])
 }
 
 clearTestData().then(() => {

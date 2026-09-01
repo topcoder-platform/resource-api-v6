@@ -3,9 +3,9 @@
  *
  * This module is loaded before controllers and services so their Joi schemas and
  * BigInt values retain the behavior exposed by the original JavaScript runtime.
+ * Node's native Promise remains in place because current HTTP dependencies use
+ * standard methods such as `Promise.withResolvers` that Bluebird does not expose.
  */
-
-global.Promise = require('bluebird')
 
 const config = require('config')
 const Joi = require('joi')

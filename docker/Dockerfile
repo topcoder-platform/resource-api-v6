@@ -1,9 +1,8 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=26.5.0
-ARG ALPINE_VERSION=3.23
+ARG NODE_VERSION=26.5.1
 
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS build
+FROM node:${NODE_VERSION}-alpine AS build
 
 ARG PNPM_VERSION=11.15.1
 
@@ -30,29 +29,31 @@ RUN mkdir -p src/scripts/seed \
   && pnpm build \
   && pnpm prune --prod
 
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS production
+FROM alpine:3.24 AS production
+
+ARG NODE_VERSION
 
 ENV NODE_ENV=production
 WORKDIR /resources-api
 
 RUN apk upgrade --no-cache \
-  && apk add --no-cache bash openssl \
-  && rm -rf /usr/local/lib/node_modules/npm \
-  && rm -f /usr/local/bin/npm /usr/local/bin/npx
+  && apk add --no-cache bash "nodejs-current=${NODE_VERSION}-r0" \
+  && addgroup -S -g 10001 app \
+  && adduser -S -D -H -u 10001 -G app app
 
-COPY --from=build --chown=node:node /resources-api/dist ./dist
-COPY --from=build --chown=node:node /resources-api/node_modules ./node_modules
-COPY --from=build --chown=node:node /resources-api/package.json ./package.json
-COPY --from=build --chown=node:node /resources-api/config ./config
-COPY --from=build --chown=node:node /resources-api/prisma.config.ts ./prisma.config.ts
-COPY --from=build --chown=node:node /resources-api/prisma ./prisma
-COPY --from=build --chown=node:node /resources-api/docs ./docs
-COPY --from=build --chown=node:node /resources-api/packages/resources-prisma-client ./packages/resources-prisma-client
-COPY --from=build --chown=node:node /resources-api/src/generated ./src/generated
-COPY --from=build --chown=node:node /resources-api/src/scripts/seed ./src/scripts/seed
-COPY --from=build --chown=node:node --chmod=755 /resources-api/appStartUp.sh ./appStartUp.sh
+COPY --from=build --chown=app:app /resources-api/dist ./dist
+COPY --from=build --chown=app:app /resources-api/node_modules ./node_modules
+COPY --from=build --chown=app:app /resources-api/package.json ./package.json
+COPY --from=build --chown=app:app /resources-api/config ./config
+COPY --from=build --chown=app:app /resources-api/prisma.config.ts ./prisma.config.ts
+COPY --from=build --chown=app:app /resources-api/prisma ./prisma
+COPY --from=build --chown=app:app /resources-api/docs ./docs
+COPY --from=build --chown=app:app /resources-api/packages/resources-prisma-client ./packages/resources-prisma-client
+COPY --from=build --chown=app:app /resources-api/src/generated ./src/generated
+COPY --from=build --chown=app:app /resources-api/src/scripts/seed ./src/scripts/seed
+COPY --from=build --chown=app:app --chmod=755 /resources-api/appStartUp.sh ./appStartUp.sh
 
-USER node
+USER app
 EXPOSE 3000
 
 CMD ["./appStartUp.sh"]
