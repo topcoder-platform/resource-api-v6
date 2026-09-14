@@ -60,6 +60,18 @@ paths:
       description: |
         Retrieve resources assigned to a challenge with optional filtering and sorting.
 
+        Results are filtered in two stages: the API first determines the
+        caller's visible resource assignments, then intersects the optional
+        `memberId`, `memberHandle`, and exact `roleId` filters with that set.
+        Filtering happens before the total, sort order, and page are computed.
+
+        Anonymous callers can list only Submitter assignments for a challenge.
+        Ordinary authenticated members can list challenge Submitters and their
+        own other assignments. An ordinary member may use `memberId` or
+        `memberHandle` only for their own account; requesting another member is
+        rejected with `403`. Administrators, M2M callers, and users with
+        challenge-wide resource access retain their broader visibility.
+
         ### Authentication
         - JWT roles: `administrator`, `copilot`, `Connect Manager`, `Topcoder User`
         - M2M scopes: `read:resources`, `all:resources`
@@ -79,15 +91,15 @@ paths:
           required: true
         - name: memberId
           type: integer
-          description: The member id
+          description: Exact member id. Ordinary authenticated members may request only their own id.
           in: query
         - name: memberHandle
           type: string
-          description: The member handle
+          description: Member handle resolved to an exact member filter. Ordinary authenticated members may request only their own handle.
           in: query
         - name: roleId
           type: string
-          description: role id to filter on
+          description: Exact resource-role UUID intersected with the caller's visible assignments before pagination.
           format: UUID
           in: query
           required: false
@@ -103,7 +115,7 @@ paths:
           required: false
       responses:
         '200':
-          description: OK - the request was successful
+          description: OK - the request was successful. Pagination metadata is returned in X-Page, X-Per-Page, X-Total, and X-Total-Pages headers.
           schema:
             type: array
             items:

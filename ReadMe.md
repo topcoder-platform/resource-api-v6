@@ -48,6 +48,35 @@ Useful commands are:
 
 The API listens on port 3000 by default. Swagger UI is available at `/v6/resources/api-docs`, and the source definition is `docs/swagger.yaml`.
 
+## Resource list filters and visibility
+
+`GET /v6/resources` first establishes the caller's authorized resource set and
+then intersects any supplied `memberId`, `memberHandle`, and exact `roleId`
+filters with that set. These filters are applied before `X-Total`, ordering, and
+pagination are calculated.
+
+- Anonymous challenge reads expose only assignments with the configured
+  Submitter role.
+- Ordinary authenticated members can see challenge Submitters plus their own
+  assignments for other roles. They may restrict by member only when the
+  requested ID or handle resolves to their own account; cross-member requests
+  return `403`.
+- Administrators, machine callers, resource managers, members assigned the
+  challenge's Copilot resource role, and members with another challenge-wide
+  full-access resource retain their existing visibility, with the same exact
+  filters applied to their result candidates.
+
+For a paginated registrant list, send the challenge UUID and canonical
+Submitter role UUID together, for example:
+
+```text
+GET /v6/resources?challengeId=<challenge-uuid>&roleId=<submitter-role-uuid>&page=1&perPage=20
+```
+
+For a signed-in member's registration check, also provide that caller's own
+member ID. The response pagination headers then describe only that exact
+challenge/member/role combination.
+
 ## Configuration compatibility
 
 The TypeScript conversion retains the existing environment-variable names and defaults. No deployment parameter rename is required.
@@ -160,6 +189,8 @@ pnpm run test:newman:clear
 ```
 
 The Postman entrypoint uses Newman 6 directly and retains the existing token coverage, per-folder execution order, cleanup, and `newman/reports.html` CircleCI artifact. The `html` reporter name selects that local aggregate report; the supported `cli`, `json`, and `junit` reporter names are passed through to Newman.
+
+The exported manual Postman environment intentionally leaves bearer-token values blank. Populate those values only in a local, uncommitted environment before using the collection; never commit live or example JWTs.
 
 CircleCI performs the Docker build and deployment using the existing `APPNAME`, `DEPLOY_ENV`, and parameter-store paths. The automated-test workflow uses Node 26.5.0, pnpm 11.15.1, and the same deployment environment names.
 

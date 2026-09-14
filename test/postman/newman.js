@@ -523,7 +523,7 @@ const requests = [
  */
 async function clearTestData () {
   logger.info('Clear the Postman test data.')
-  await helper.postRequest(`${config.API_BASE_URL}/${config.API_VERSION}/resources/internal/jobs/clean`)
+  await helper.postRequest('resources', ['internal', 'jobs', 'clean'])
   logger.info('Finished clear the Postman test data.')
 }
 
