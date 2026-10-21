@@ -5,12 +5,7 @@ const newman = require('newman')
 const helper = require('../../src/common/helper')
 const logger = require('../../src/common/logger')
 
-const m2m = require('tc-core-library-js').auth.m2m({
-  AUTH0_URL: config.AUTH0_URL,
-  AUTH0_AUDIENCE: config.AUTH0_AUDIENCE,
-  TOKEN_CACHE_TIME: config.TOKEN_CACHE_TIME,
-  AUTH0_PROXY_SERVER_URL: config.AUTH0_PROXY_SERVER_URL
-})
+const m2m = require('tc-core-library-js').auth.m2m()
 
 let executions = 0
 let failures = 0
@@ -66,8 +61,8 @@ function parseReporters (value) {
  */
 function validateConfig () {
   const requiredStrings = [
-    'AUTH0_CLIENT_ID',
-    'AUTH0_CLIENT_SECRET',
+    'KEYCLOAK_CLIENT_ID',
+    'KEYCLOAK_CLIENT_SECRET',
     'AUTH_V2_URL',
     'AUTH_V2_CLIENT_ID',
     'AUTH_V3_URL',
@@ -125,10 +120,10 @@ async function postJson (url, body) {
  * Get the machine token used by M2M Postman requests.
  *
  * @returns {Promise<string>} machine token without a Bearer prefix
- * @throws {Error} when Auth0 cannot issue the configured client a token
+ * @throws {Error} when Keycloak cannot issue or verify the configured client a token
  */
 async function getM2MToken () {
-  return m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
+  return m2m.getMachineToken()
 }
 
 /**

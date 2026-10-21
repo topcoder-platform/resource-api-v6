@@ -12,7 +12,7 @@ const HttpStatus = require('http-status-codes')
 const helper = require('./src/common/helper')
 const errors = require('./src/common/errors')
 const routes = require('./src/routes')
-const authenticator = require('tc-core-library-js').middleware.jwtAuthenticator
+const {authenticate, hasRequiredScopes} = require('./src/common/auth')
 
 /**
  * Configures every public API route on the supplied Express application.
@@ -45,14 +45,10 @@ function configureRoutes (app: any): void {
       // Add the authenticator check if the route has auth metadata.
       if (def.auth) {
         actions.push((req, res, next) => {
-          let token
-          if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-            token = req.headers.authorization.split(' ')[1]
-          }
-          if (def.allowAnonymous && !token) {
+          if (def.allowAnonymous && !req.headers.authorization) {
             next()
           } else {
-            authenticator(_.pick(config, ['AUTH_SECRET', 'VALID_ISSUERS']))(req, res, next)
+            authenticate(req, res, next)
           }
         })
 
@@ -69,25 +65,15 @@ function configureRoutes (app: any): void {
           })
         }
 
-        if (!def.allowAnonymous) {
-          actions.push((req, res, next) => {
-            if (req.authUser.isMachine) {
-              if (!req.authUser.scopes || !helper.checkIfExists(def.scopes, req.authUser.scopes)) {
-                next(new errors.ForbiddenError('You are not allowed to perform this action!'))
-              } else {
-                next()
-              }
-            } else {
-              req.authUser.userId = String(req.authUser.userId)
-              console.log(req.authUser)
-              if (!req.authUser.roles || !helper.checkIfExists(def.access, req.authUser.roles)) {
-                next(new errors.ForbiddenError('You are not allowed to perform this action!'))
-              } else {
-                next()
-              }
-            }
-          })
-        }
+        actions.push((req, res, next) => {
+          if (!req.authUser && def.allowAnonymous) return next()
+          if (req.authUser.kind === 'service') {
+            if (!hasRequiredScopes(def, req.authUser)) return next(new errors.ForbiddenError('You are not allowed to perform this action!'))
+          } else if (!def.allowAnonymous && (!req.authUser.roles || !helper.checkIfExists(def.access, req.authUser.roles))) {
+            return next(new errors.ForbiddenError('You are not allowed to perform this action!'))
+          }
+          next()
+        })
       }
 
       actions.push(method)

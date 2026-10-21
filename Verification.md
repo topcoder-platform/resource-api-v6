@@ -78,7 +78,7 @@ In development, published topics can be inspected with the existing event-observ
 
 ## Configuration verification
 
-Deploy without renaming or adding parameter-store keys. In particular, confirm the service reads the existing Auth0, scope, downstream API, role ID, Bus API, topic, email, database, and Prisma timeout variables documented in `ReadMe.md`.
+This migration branch must stay undeployed until rollout. Configure dedicated Keycloak provider/issuer/audience/endpoint/credentials as documented in `docs/keycloak-m2m.md`; retain existing member, scope, downstream API, role ID, Bus API, topic, email, database and Prisma timeout settings. Do not overwrite common Auth0 parameters.
 
 Keep the legacy `EMAIL_NOTIFICATIN_TOPIC` spelling and the existing `KAFKA_*` names. No direct Kafka connection parameters should be required.
 

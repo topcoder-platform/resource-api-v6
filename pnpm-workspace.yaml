@@ -1,5 +1,5 @@
 overrides:
-  '@topcoder-platform/topcoder-bus-api-wrapper>tc-core-library-js': https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/1075136355e1e1c4779f2138a30f3ffbd718bfa4
+  tc-core-library-js: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c262f4aca971904f308085bdeaaed35cdf3cfa7d
   '@hono/node-server@<2.0.11': 2.0.11
   'ajv@>=6.0.0 <6.14.0': 6.15.0
   'axios@<1.18.1': 1.18.1

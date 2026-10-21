@@ -15,10 +15,16 @@ const constants = require('../../app-constants')
 const errors = require('./errors')
 const logger = require('./logger')
 const m2mAuth = require('tc-core-library-js').auth.m2m
-const m2m = m2mAuth(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME', 'AUTH0_PROXY_SERVER_URL']))
+const m2m = m2mAuth()
 const busApi = require('tc-bus-api-wrapper')
-const busApiClient = busApi(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME', 'AUTH0_CLIENT_ID',
-  'AUTH0_CLIENT_SECRET', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC', 'AUTH0_PROXY_SERVER_URL']))
+const busApiClient = busApi({
+      AUTH0_URL: config.KEYCLOAK_TOKEN_URL,
+      AUTH0_AUDIENCE: config.KEYCLOAK_AUDIENCE,
+      AUTH0_CLIENT_ID: config.KEYCLOAK_CLIENT_ID,
+      AUTH0_CLIENT_SECRET: config.KEYCLOAK_CLIENT_SECRET,
+      BUSAPI_URL: config.BUSAPI_URL,
+      KAFKA_ERROR_TOPIC: config.KAFKA_ERROR_TOPIC
+    })
 
 const prismaClients = require('./prisma')
 const prisma = prismaClients.getClient()
@@ -566,7 +572,7 @@ async function validateDuplicate (modelName, queryParams, errorMessage) {
  */
 async function getRequest (apiName, pathSegments: any[] = [], query?: any) {
   const url = buildOutboundApiUrl(apiName, pathSegments)
-  const m2mToken = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
+  const m2mToken = await m2m.getMachineToken()
   logger.debug(`GET ${url} with query ${JSON.stringify(query)}`)
   return request
     .get(url)
@@ -593,7 +599,7 @@ async function getRequest (apiName, pathSegments: any[] = [], query?: any) {
 async function postRequest (apiName, pathSegments: any[] = [], data?: any) {
   try {
     const url = buildOutboundApiUrl(apiName, pathSegments)
-    const m2mToken = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
+    const m2mToken = await m2m.getMachineToken()
 
     const res = await request
       .post(url)

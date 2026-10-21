@@ -10,19 +10,18 @@ module.exports = {
   // used to properly set the header response to api calls for services behind a load balancer
   API_BASE_URL: process.env.API_BASE_URL || `http://localhost:3000`,
 
-  AUTH_SECRET: process.env.AUTH_SECRET || 'mysecret',
-  VALID_ISSUERS: process.env.VALID_ISSUERS || '["https://api.topcoder-dev.com", "https://api.topcoder.com", "https://topcoder-dev.auth0.com/"]',
+  AUTH_SECRET: process.env.AUTH_SECRET,
+  VALID_ISSUERS: process.env.VALID_ISSUERS || '[]',
 
   SUBMITTER_RESOURCE_ROLE_ID: process.env.SUBMITTER_RESOURCE_ROLE_ID || '732339e7-8e30-49d7-9198-cccf9451e221',
   REVIEWER_RESOURCE_ROLE_ID: process.env.REVIEWER_RESOURCE_ROLE_ID || '318b9c07-079a-42d9-a81f-b96be1dc1099',
   ITERATIVE_REVIEWER_RESOURCE_ROLE_ID: process.env.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID || 'f6df7212-b9d6-4193-bfb1-b383586fce63',
 
-  AUTH0_URL: process.env.AUTH0_URL || 'https://topcoder-dev.auth0.com/oauth/token',
-  AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || 'https://m2m.topcoder-dev.com/',
+  KEYCLOAK_TOKEN_URL: process.env.KEYCLOAK_TOKEN_URL,
+  KEYCLOAK_AUDIENCE: process.env.KEYCLOAK_AUDIENCE,
+  KEYCLOAK_CLIENT_ID: process.env.KEYCLOAK_CLIENT_ID,
+  KEYCLOAK_CLIENT_SECRET: process.env.KEYCLOAK_CLIENT_SECRET,
   TOKEN_CACHE_TIME: process.env.TOKEN_CACHE_TIME || 90,
-  AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID || '',
-  AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET || '',
-  AUTH0_PROXY_SERVER_URL: process.env.AUTH0_PROXY_SERVER_URL,
 
   TERMS_API_URL: process.env.TERMS_API_URL || 'https://api.topcoder-dev.com/v5/terms',
   MEMBER_API_URL: process.env.MEMBER_API_URL || 'https://api.topcoder-dev.com/v5/members',
