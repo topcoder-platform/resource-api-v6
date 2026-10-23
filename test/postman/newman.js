@@ -5,7 +5,17 @@ const newman = require('newman')
 const helper = require('../../src/common/helper')
 const logger = require('../../src/common/logger')
 
-const m2m = require('tc-core-library-js').auth.m2m()
+const { auth } = require('tc-core-library-js')
+
+// USE_KEYCLOAK=true: KEYCLOAK_* (the Auth0 options are ignored); otherwise the AUTH0_* config.
+const m2m = auth.m2m({
+  AUTH0_URL: config.AUTH0_URL,
+  AUTH0_AUDIENCE: config.AUTH0_AUDIENCE,
+  TOKEN_CACHE_TIME: config.TOKEN_CACHE_TIME,
+  AUTH0_PROXY_SERVER_URL: config.AUTH0_PROXY_SERVER_URL,
+  AUTH0_CLIENT_ID: config.AUTH0_CLIENT_ID,
+  AUTH0_CLIENT_SECRET: config.AUTH0_CLIENT_SECRET
+})
 
 let executions = 0
 let failures = 0
@@ -54,15 +64,18 @@ function parseReporters (value) {
 
 /**
  * Validate the credentials and runner settings used by the resource Postman
- * collection.
+ * collection. The M2M credentials checked follow USE_KEYCLOAK: KEYCLOAK_CLIENT_ID and
+ * KEYCLOAK_CLIENT_SECRET when it is true, otherwise AUTH0_CLIENT_ID and AUTH0_CLIENT_SECRET.
  *
  * @returns {string[]} configured Newman reporters
  * @throws {Error} if required credentials or runner settings are missing
+ * @throws {TypeError} if USE_KEYCLOAK is neither true nor false
  */
 function validateConfig () {
   const requiredStrings = [
-    'KEYCLOAK_CLIENT_ID',
-    'KEYCLOAK_CLIENT_SECRET',
+    ...(auth.useKeycloak()
+      ? ['KEYCLOAK_CLIENT_ID', 'KEYCLOAK_CLIENT_SECRET']
+      : ['AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET']),
     'AUTH_V2_URL',
     'AUTH_V2_CLIENT_ID',
     'AUTH_V3_URL',
@@ -117,10 +130,11 @@ async function postJson (url, body) {
 }
 
 /**
- * Get the machine token used by M2M Postman requests.
+ * Get the machine token used by M2M Postman requests from the provider selected by
+ * USE_KEYCLOAK (Keycloak KEYCLOAK_* settings, or the AUTH0_* config).
  *
  * @returns {Promise<string>} machine token without a Bearer prefix
- * @throws {Error} when Keycloak cannot issue or verify the configured client a token
+ * @throws {Error} when the active provider cannot issue (or Keycloak verify) the configured client a token
  */
 async function getM2MToken () {
   return m2m.getMachineToken()

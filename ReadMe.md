@@ -85,7 +85,9 @@ The TypeScript conversion retains the existing environment-variable names and de
 
 - `LOG_LEVEL`, `PORT`, `API_VERSION`, `DEFAULT_PAGE_SIZE`, and `API_BASE_URL`
 - `AUTH_SECRET` and `VALID_ISSUERS`
-- `KEYCLOAK_TOKEN_URL`, `KEYCLOAK_AUDIENCE`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
+- `USE_KEYCLOAK` (`true` = Keycloak M2M, unset/`false` = Auth0 M2M)
+- With `USE_KEYCLOAK=true`: `KEYCLOAK_ISSUER`, `KEYCLOAK_TOKEN_URL`, `KEYCLOAK_AUDIENCE`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
+- Otherwise: `AUTH0_URL`, `AUTH0_AUDIENCE`, `TOKEN_CACHE_TIME`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, and `AUTH0_PROXY_SERVER_URL`
 - `SCOPE_READ`, `SCOPE_CREATE`, `SCOPE_DELETE`, `SCOPE_UPDATE`, and `SCOPE_ALL`
 - `SUBMITTER_RESOURCE_ROLE_ID`, `REVIEWER_RESOURCE_ROLE_ID`, and `ITERATIVE_REVIEWER_RESOURCE_ROLE_ID`
 
@@ -198,4 +200,4 @@ See `Verification.md` for the regression checklist.
 
 ## Keycloak migration branch
 
-See [Keycloak trust, credentials and rollout](docs/keycloak-m2m.md). Explicit `M2M_PROVIDER=keycloak`, issuer, audience and token URL are required. The shared core owns token expiry and caching. Member sessions remain Auth0; member OAuth scopes never grant machine permissions. Existing DEV services are unchanged.
+See [Keycloak trust, credentials and rollout](docs/keycloak-m2m.md). `USE_KEYCLOAK=true` requires the Keycloak issuer, audience and token URL; unset or `false` keeps the Auth0 `AUTH0_*` settings, which is also the rollback path. The shared core owns token expiry and caching. Member sessions remain Auth0; member OAuth scopes never grant machine permissions. Existing DEV services are unchanged.

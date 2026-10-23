@@ -14,17 +14,24 @@ const moment = require('moment')
 const constants = require('../../app-constants')
 const errors = require('./errors')
 const logger = require('./logger')
-const m2mAuth = require('tc-core-library-js').auth.m2m
-const m2m = m2mAuth()
+const { auth } = require('tc-core-library-js')
+const m2mAuth = auth.m2m
+// USE_KEYCLOAK=true: the core ignores these Auth0 options and uses KEYCLOAK_*. Otherwise
+// it uses the AUTH0_* config (with its pre-migration defaults), as before the migration.
+const m2m = m2mAuth(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME', 'AUTH0_PROXY_SERVER_URL',
+  'AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET']))
 const busApi = require('tc-bus-api-wrapper')
+// tc-bus-api-wrapper option names: KEYCLOAK_* values when USE_KEYCLOAK=true, otherwise the AUTH0_* config.
 const busApiClient = busApi({
-      AUTH0_URL: config.KEYCLOAK_TOKEN_URL,
-      AUTH0_AUDIENCE: config.KEYCLOAK_AUDIENCE,
-      AUTH0_CLIENT_ID: config.KEYCLOAK_CLIENT_ID,
-      AUTH0_CLIENT_SECRET: config.KEYCLOAK_CLIENT_SECRET,
-      BUSAPI_URL: config.BUSAPI_URL,
-      KAFKA_ERROR_TOPIC: config.KAFKA_ERROR_TOPIC
-    })
+  ...auth.wrapperSettings({
+    ..._.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET', 'AUTH0_PROXY_SERVER_URL']),
+    KEYCLOAK_TOKEN_URL: config.KEYCLOAK_TOKEN_URL,
+    KEYCLOAK_AUDIENCE: config.KEYCLOAK_AUDIENCE,
+    KEYCLOAK_CLIENT_ID: config.KEYCLOAK_CLIENT_ID,
+    KEYCLOAK_CLIENT_SECRET: config.KEYCLOAK_CLIENT_SECRET
+  }),
+  ..._.pick(config, ['TOKEN_CACHE_TIME', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC'])
+})
 
 const prismaClients = require('./prisma')
 const prisma = prismaClients.getClient()

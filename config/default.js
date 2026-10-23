@@ -17,11 +17,18 @@ module.exports = {
   REVIEWER_RESOURCE_ROLE_ID: process.env.REVIEWER_RESOURCE_ROLE_ID || '318b9c07-079a-42d9-a81f-b96be1dc1099',
   ITERATIVE_REVIEWER_RESOURCE_ROLE_ID: process.env.ITERATIVE_REVIEWER_RESOURCE_ROLE_ID || 'f6df7212-b9d6-4193-bfb1-b383586fce63',
 
+  // M2M settings. USE_KEYCLOAK=true (read by tc-core-library-js) uses the KEYCLOAK_* values;
+  // unset or false uses the AUTH0_* values and defaults from before the Keycloak migration.
   KEYCLOAK_TOKEN_URL: process.env.KEYCLOAK_TOKEN_URL,
   KEYCLOAK_AUDIENCE: process.env.KEYCLOAK_AUDIENCE,
   KEYCLOAK_CLIENT_ID: process.env.KEYCLOAK_CLIENT_ID,
   KEYCLOAK_CLIENT_SECRET: process.env.KEYCLOAK_CLIENT_SECRET,
+  AUTH0_URL: process.env.AUTH0_URL || 'https://topcoder-dev.auth0.com/oauth/token',
+  AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || 'https://m2m.topcoder-dev.com/',
   TOKEN_CACHE_TIME: process.env.TOKEN_CACHE_TIME || 90,
+  AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID || '',
+  AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET || '',
+  AUTH0_PROXY_SERVER_URL: process.env.AUTH0_PROXY_SERVER_URL,
 
   TERMS_API_URL: process.env.TERMS_API_URL || 'https://api.topcoder-dev.com/v5/terms',
   MEMBER_API_URL: process.env.MEMBER_API_URL || 'https://api.topcoder-dev.com/v5/members',

@@ -5,6 +5,9 @@
 // Keep the unit suite self-contained while allowing CI/developer overrides.
 process.env.KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID || 'resource-api-test-client'
 process.env.KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET || 'resource-api-test-secret'
+// Synthetic Auth0 credentials for the USE_KEYCLOAK=false (rollback) provider tests.
+process.env.AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID || 'resource-api-test-auth0-client'
+process.env.AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET || 'resource-api-test-auth0-secret'
 process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://johndoe:mypassword@localhost:5532/resourceapi?schema=resources'
 process.env.MEMBER_DB_URL = process.env.MEMBER_DB_URL || 'postgresql://johndoe:mypassword@localhost:5632/memberdb?schema=public'
 process.env.CHALLENGE_DB_URL = process.env.CHALLENGE_DB_URL || 'postgresql://johndoe:mypassword@localhost:5732/challengedb?schema=public'

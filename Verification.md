@@ -78,7 +78,7 @@ In development, published topics can be inspected with the existing event-observ
 
 ## Configuration verification
 
-This migration branch must stay undeployed until rollout. Configure dedicated Keycloak provider/issuer/audience/endpoint/credentials as documented in `docs/keycloak-m2m.md`; retain existing member, scope, downstream API, role ID, Bus API, topic, email, database and Prisma timeout settings. Do not overwrite common Auth0 parameters.
+This migration branch must stay undeployed until rollout. `USE_KEYCLOAK` selects the M2M provider: with `true`, configure the dedicated Keycloak issuer/audience/endpoint/credentials as documented in `docs/keycloak-m2m.md`; unset or `false` uses the existing Auth0 parameters. Retain existing Auth0, member, scope, downstream API, role ID, Bus API, topic, email, database and Prisma timeout settings so `USE_KEYCLOAK=false` can roll back. Do not overwrite common Auth0 parameters.
 
 Keep the legacy `EMAIL_NOTIFICATIN_TOPIC` spelling and the existing `KAFKA_*` names. No direct Kafka connection parameters should be required.
 
