@@ -12,7 +12,7 @@ const HttpStatus = require('http-status-codes')
 const helper = require('./src/common/helper')
 const errors = require('./src/common/errors')
 const routes = require('./src/routes')
-const authenticator = require('tc-core-library-js').middleware.jwtAuthenticator
+const authenticator = require('tc-core-library-js').createJwtAuthenticator
 
 /**
  * Configures every public API route on the supplied Express application.
