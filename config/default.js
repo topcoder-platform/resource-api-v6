@@ -11,6 +11,7 @@ module.exports = {
   API_BASE_URL: process.env.API_BASE_URL || `http://localhost:3000`,
 
   AUTH_SECRET: process.env.AUTH_SECRET,
+  JWT_AUDIENCE: process.env.JWT_AUDIENCE,
   VALID_ISSUERS: process.env.VALID_ISSUERS || '["https://api.topcoder-dev.com", "https://api.topcoder.com", "https://topcoder-dev.auth0.com/"]',
 
   SUBMITTER_RESOURCE_ROLE_ID: process.env.SUBMITTER_RESOURCE_ROLE_ID || '732339e7-8e30-49d7-9198-cccf9451e221',

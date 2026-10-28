@@ -28,6 +28,8 @@ const authenticator = require('tc-core-library-js').createJwtAuthenticator
  * authorization middleware raises an application error.
  */
 function configureRoutes (app: any): void {
+  // Share issuer/audience configuration and the JWKS cache across all routes.
+  const authenticate = authenticator(_.pick(config, ['AUTH_SECRET', 'VALID_ISSUERS', 'JWT_AUDIENCE', 'AUTH0_AUDIENCE']))
   _.each(routes, (verbs, path) => {
     _.each(verbs, (def, verb) => {
       const controllerPath = `./src/controllers/${def.controller}`
@@ -52,7 +54,7 @@ function configureRoutes (app: any): void {
           if (def.allowAnonymous && !token) {
             next()
           } else {
-            authenticator(_.pick(config, ['AUTH_SECRET', 'VALID_ISSUERS']))(req, res, next)
+            authenticate(req, res, next)
           }
         })
 
