@@ -10,7 +10,8 @@ module.exports = {
   // used to properly set the header response to api calls for services behind a load balancer
   API_BASE_URL: process.env.API_BASE_URL || `http://localhost:3000`,
 
-  AUTH_SECRET: process.env.AUTH_SECRET || 'mysecret',
+  AUTH_SECRET: process.env.AUTH_SECRET,
+  JWT_AUDIENCE: process.env.JWT_AUDIENCE,
   VALID_ISSUERS: process.env.VALID_ISSUERS || '["https://api.topcoder-dev.com", "https://api.topcoder.com", "https://topcoder-dev.auth0.com/"]',
 
   SUBMITTER_RESOURCE_ROLE_ID: process.env.SUBMITTER_RESOURCE_ROLE_ID || '732339e7-8e30-49d7-9198-cccf9451e221',
@@ -40,7 +41,7 @@ module.exports = {
     ALL: process.env.SCOPE_ALL || 'all:resources'
   },
 
-  BUSAPI_URL: process.env.BUSAPI_URL || 'https://api.topcoder-dev.com/v5',
+  BUSAPI_URL: process.env.BUSAPI_URL || 'https://api.topcoder-dev.com/v6',
   KAFKA_ERROR_TOPIC: process.env.KAFKA_ERROR_TOPIC || 'common.error.reporting',
   KAFKA_MESSAGE_ORIGINATOR: process.env.KAFKA_MESSAGE_ORIGINATOR || 'resources-api',
   RESOURCE_CREATE_TOPIC: process.env.RESOURCE_CREATE_TOPIC || 'challenge.action.resource.create',

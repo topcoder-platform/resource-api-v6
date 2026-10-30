@@ -5,7 +5,7 @@ const newman = require('newman')
 const helper = require('../../src/common/helper')
 const logger = require('../../src/common/logger')
 
-const m2m = require('tc-core-library-js').auth.m2m({
+const m2m = require('tc-core-library-js').createM2MClient({
   AUTH0_URL: config.AUTH0_URL,
   AUTH0_AUDIENCE: config.AUTH0_AUDIENCE,
   TOKEN_CACHE_TIME: config.TOKEN_CACHE_TIME,
