@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=26.5.1
+ARG NODE_VERSION=26.12.1
 
 FROM node:${NODE_VERSION}-alpine AS build
 
@@ -19,11 +19,14 @@ RUN apk upgrade --no-cache \
 # without connecting to a database. The committed external client is copied
 # later with the rest of the source tree and is not regenerated.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts tsconfig.json tsconfig.build.json ./
+COPY tools ./tools
+COPY patches ./patches
 COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
 COPY . .
 RUN mkdir -p src/scripts/seed \
+  && pnpm run test:dependency-compat \
   && pnpm lint \
   && pnpm test:logger \
   && pnpm build \

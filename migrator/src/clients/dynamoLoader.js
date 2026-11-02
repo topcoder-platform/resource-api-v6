@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { chain } = require('stream-chain');
 const { parser } = require('stream-json');
-const { streamArray } = require('stream-json/streamers/StreamArray');
+const { streamArray } = require('stream-json/streamers/stream-array.js');
 
 async function loadJSON(filePath) {
   return new Promise((resolve, reject) => {

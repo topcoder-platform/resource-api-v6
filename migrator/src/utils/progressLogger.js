@@ -16,8 +16,11 @@ function createSimpleProgressBar(totalSteps) {
         const empty = barWidth - filled;
         const bar = '█'.repeat(filled) + '░'.repeat(empty);
 
-        process.stdout.clearLine(0);
-        process.stdout.cursorTo(0);
+        // Redirected migration logs do not expose the TTY cursor methods.
+        if (process.stdout.isTTY) {
+          process.stdout.clearLine(0);
+          process.stdout.cursorTo(0);
+        }
         process.stdout.write(`Progress: [${bar}] ${percentage}%`);
       }
     },
