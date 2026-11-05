@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=26.5.1
+ARG NODE_VERSION=26.12.1
 
 FROM node:${NODE_VERSION}-alpine AS build
 
@@ -19,11 +19,14 @@ RUN apk upgrade --no-cache \
 # without connecting to a database. The committed external client is copied
 # later with the rest of the source tree and is not regenerated.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts tsconfig.json tsconfig.build.json ./
+COPY tools ./tools
+COPY patches ./patches
 COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
 COPY . .
 RUN mkdir -p src/scripts/seed \
+  && pnpm run test:dependency-compat \
   && pnpm lint \
   && pnpm test:logger \
   && pnpm build \
@@ -36,8 +39,11 @@ ARG NODE_VERSION
 ENV NODE_ENV=production
 WORKDIR /resources-api
 
+# Alpine replaces old APK patch versions. Keep the configured Node major while
+# accepting maintained patch releases and verify the selected runtime below.
 RUN apk upgrade --no-cache \
-  && apk add --no-cache bash "nodejs-current=${NODE_VERSION}-r0" \
+  && apk add --no-cache bash "nodejs-current~${NODE_VERSION%%.*}" \
+  && test "$(node -p 'process.versions.node.split(".")[0]')" = "${NODE_VERSION%%.*}" \
   && addgroup -S -g 10001 app \
   && adduser -S -D -H -u 10001 -G app app
 

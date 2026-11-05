@@ -34,7 +34,7 @@
   1. Clone the repo and install dependencies:
 
   ```bash
-  npm install
+  npm install --install-links=true
   ```
 
   2. Start PostgreSQL with Docker Compose:

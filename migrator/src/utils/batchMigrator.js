@@ -2,7 +2,7 @@
 const fs = require('fs');
 const { chain } = require('stream-chain');
 const { parser } = require('stream-json');
-const { streamArray } = require('stream-json/streamers/StreamArray');
+const { streamArray } = require('stream-json/streamers/stream-array.js');
 const { createSimpleProgressBar } = require('./progressLogger');
 const { countJsonRecordsByBrace } = require('./countJsonRecordsByBrace');
 

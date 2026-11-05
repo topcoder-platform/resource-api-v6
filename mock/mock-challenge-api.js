@@ -6,10 +6,13 @@ const config = require('config')
 const http = require('http')
 const send = require('http-json-response')
 const logger = require('../src/common/logger')
-const m2mVerify = require('tc-core-library-js').auth.verifier
-const verify = m2mVerify(config.VALID_ISSUERS, '24h')
+const { createJwtVerifier } = require('tc-core-library-js')
+const verifier = createJwtVerifier({
+  VALID_ISSUERS: config.VALID_ISSUERS, AUTH_SECRET: config.AUTH_SECRET,
+  AUTH0_AUDIENCE: config.AUTH0_AUDIENCE, JWT_AUDIENCE: process.env.JWT_AUDIENCE
+})
 
-const mockChallengeApi = http.createServer((req, res) => {
+const mockChallengeApi = http.createServer(async (req, res) => {
   logger.debug(`${req.method} ${req.url}`)
   // Parse the token from request header
   let token
@@ -20,12 +23,13 @@ const mockChallengeApi = http.createServer((req, res) => {
     }
   }
 
-  verify.validateToken(token, config.AUTH_SECRET, (error, decoded) => {
-    if (error) {
+  try {
+    await verifier.verify(token)
+  } catch {
       res.statusCode = 401
       res.end('Not Authorized')
       return
-    }
+  }
 
     if (req.method === 'GET' && req.url.match(/^\/v5\/challenges\/[a-zA-Z0-9-]+(\?[a-zA-Z=]+)?$/)) {
       const list = req.url.split('/')
@@ -124,7 +128,6 @@ const mockChallengeApi = http.createServer((req, res) => {
       res.statusCode = 404
       res.end('Not Found')
     }
-  })
 })
 
 if (!module.parent) {
