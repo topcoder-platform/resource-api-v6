@@ -28,6 +28,7 @@
     "minimatch@<9": "file:../tools/minimatch-compat",
     "minimatch@>=9": "11.0.1",
     "glob@>=9": "14.0.2",
-    "deepmerge-ts": "8.0.0"
+    "deepmerge-ts": "8.0.0",
+    "effect@^3": "3.22.1"
   }
 }
