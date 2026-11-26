@@ -3,6 +3,7 @@
  */
 
 // Keep the unit suite self-contained while allowing CI/developer overrides.
+process.env.AUTH_SECRET = process.env.AUTH_SECRET || 'local-resource-tests-only-secret-32-bytes'
 process.env.AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID || 'resource-api-test-client'
 process.env.AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET || 'resource-api-test-secret'
 process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://johndoe:mypassword@localhost:5532/resourceapi?schema=resources'
@@ -61,9 +62,10 @@ function installHttpMocks () {
     })
 
   // Mock Posting to Bus API
-  nock(/topcoder-dev.com/, { allowUnmocked: true })
+  const busUrl = new URL(config.BUSAPI_URL)
+  nock(busUrl.origin, { allowUnmocked: true })
     .persist()
-    .post('/v5/bus/events')
+    .post(busUrl.pathname.replace(/\/$/, '') + '/bus/events')
     .reply(204)
 }
 
