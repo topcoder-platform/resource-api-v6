@@ -57,3 +57,8 @@ allowBuilds:
 patchedDependencies:
   newman@6.2.2: patches/newman@6.2.2.patch
   postman-collection@4.4.0: patches/postman-collection@4.4.0.patch
+
+minimumReleaseAgeExclude:
+  - '@nestjs/common@12.6.3'
+  - '@nestjs/core@12.6.3'
+  - '@nestjs/platform-express@12.6.3'

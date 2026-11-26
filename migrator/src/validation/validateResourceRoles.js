@@ -1,7 +1,8 @@
+const { createPostgresAdapter } = require('../postgres-adapter');
 const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { loadJSON } = require('../clients/dynamoLoader');
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: createPostgresAdapter(process.env.DATABASE_URL) });
 
 console.log('🔍 Starting ResourceRole validation...');
 console.time('⏱️  Validation Duration');

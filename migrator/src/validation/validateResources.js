@@ -1,7 +1,8 @@
+const { createPostgresAdapter } = require('../postgres-adapter');
 const fs = require('fs');
 const readline = require('readline');
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: createPostgresAdapter(process.env.DATABASE_URL) });
 
 async function validateResources(filePath = './data/Resource_data.json') {
     console.log(`🔍 Starting Resources validation from ${filePath}`);
